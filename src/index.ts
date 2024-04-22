@@ -24,7 +24,7 @@ export class FrameworkStarter extends FrameworkApp {
 
     #docsPath: string = '/docs'
 
-    protected docs: {openapi: OpenAPI, postman: Postman}
+    protected docs: { openapi: OpenAPI, postman: Postman }
 
     get openapi() {
         return this.docs.openapi
@@ -108,7 +108,7 @@ export class FrameworkStarter extends FrameworkApp {
     build<T extends http.ServerOptions = http.ServerOptions>(options?: T | null, mod?: {
         createServer(requestListener?: http.RequestListener): http.Server;
         createServer(options: T, requestListener?: http.RequestListener | undefined): http.Server;
-      }): http.Server {
+    }): http.Server {
         this.addDocsRoute();
         const result = super.build(options, mod);
         this.refreshDocs();
@@ -155,30 +155,30 @@ app.get({
     path: '/',
     description: 'Homepage',
 }, (_, res) => {
-    res.json({message: 'hello world'})
+    res.json({ message: 'hello world' })
 })
-.get({
-    path: '/username',
-    description: 'Username',
-    parameters: {
-        query: {
-            name: Joi.string().valid('novice')
+    .get({
+        path: '/username',
+        description: 'Username',
+        parameters: {
+            query: {
+                name: Joi.string().valid('novice')
+            }
         }
-    }
-}, (req, res) => {
-    res.json({message: `Hello ${req.query.name || 'world'}!`})
-})
-.get({
-    path: '/user/:name',
-    description: 'Username',
-    parameters: {
-        params: {
-            name: Joi.string().valid('novice').required()
+    }, (req, res) => {
+        res.json({ message: `Hello ${req.query.name || 'world'}!` })
+    })
+    .get({
+        path: '/user/:name',
+        description: 'Username',
+        parameters: {
+            params: {
+                name: Joi.string().valid('novice').required()
+            }
         }
-    }
-}, (req, res) => {
-    res.json({message: `Hello ${req.params.name}!`})
-})
-.listen(3000)
+    }, (req, res) => {
+        res.json({ message: `Hello ${req.params.name}!` })
+    })
+    .listen(3000)
 
 /**** /TESTS ****/
