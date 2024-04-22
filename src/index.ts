@@ -42,7 +42,7 @@ export class FrameworkStarter extends FrameworkApp {
             config.framework = config.framework || {}
             config.framework.validators = config.framework.validators || []
             config.framework.validators.push(
-                validatorJoi({ stripUnknown: true }, (err, _req, res, _next) => {
+                validatorJoi({ stripUnknown: true }, (err, _req, res) => {
                     return res.status(400).json(err);
                 })
             )
