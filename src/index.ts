@@ -16,7 +16,7 @@ export interface StarterOptions extends Options {
         consumes?: string[],
         security?: GroupAuthUtil,
         license?: LicenseObject | string,
-        hosts?: ServerObject[]
+        host?: ServerObject
     }
 }
 
@@ -88,11 +88,29 @@ export class FrameworkStarter extends FrameworkApp {
                 this.docs.openapi.setLicense(config?.docs?.license);
         }
 
-        if (config?.docs?.hosts) {
-            this.docs.openapi.setServers(config?.docs?.hosts);
-            this.docs.postman.setHost(config?.docs?.hosts.map(h => h.url));
+        if (config?.docs?.host?.url) {
+            const hostUrl = config.docs.host.url;
+            const regex = /(?<=(?<!\{)\{)[^{}]*(?=\}(?!\}))/g;
+            const variables = config.docs.host.variables;
 
-            //this.docs.postman.addVariable({})
+            this.docs.openapi.setServers(config.docs.host);
+
+            this.docs.postman.setHost(hostUrl.replace(regex, match => {
+                return `{${match}}`
+            }));
+
+            if (variables && Object.keys(variables).length) {
+                Object.keys(variables).forEach(
+                    varName => {
+                        this.docs.postman.addVariable({
+                            description: variables[varName].description,
+                            key: varName,
+                            name: varName,
+                            value: variables[varName].default
+                        })
+                    }
+                )
+            }
         }
     }
 
@@ -120,29 +138,24 @@ export class FrameworkStarter extends FrameworkApp {
 
 const app = new FrameworkStarter({
     docs: {
-        hosts: [
-            {
-                url: 'http://localhost:3000'
-            },
-            {
-                url: 'http://{domain}:{port}',
-                description: 'API url for development',
-                variables: {
-                    domain: {
-                        default: 'localhost',
-                        description: 'Dev domain'
-                    },
-                    port: {
-                        enum: [
-                            '3000',
-                            '8000',
-                            '80'
-                        ],
-                        default: '3000'
-                    }
+        host: {
+            url: 'http://{domain}:{port}',
+            description: 'API url for development',
+            variables: {
+                domain: {
+                    default: 'localhost',
+                    description: 'Dev domain'
+                },
+                port: {
+                    enum: [
+                        '3000',
+                        '8000',
+                        '80'
+                    ],
+                    default: '3000'
                 }
             }
-        ],
+        },
         title: '@novice1 API',
         license: {
             name: 'ISC',
@@ -153,13 +166,15 @@ const app = new FrameworkStarter({
 
 app.get({
     path: '/',
-    description: 'Homepage',
+    name: 'Homepage',
+    description: 'Serve homepage api',
 }, (_, res) => {
     res.json({ message: 'hello world' })
 })
     .get({
         path: '/username',
-        description: 'Username',
+        name: 'Username',
+        description: 'Serve username api',
         parameters: {
             query: {
                 name: Joi.string().valid('novice')
@@ -170,7 +185,8 @@ app.get({
     })
     .get({
         path: '/user/:name',
-        description: 'Username',
+        name: 'Username path',
+        description: 'Serve username path api',
         parameters: {
             params: {
                 name: Joi.string().valid('novice').required()
