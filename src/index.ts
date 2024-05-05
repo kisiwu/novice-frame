@@ -5,6 +5,11 @@ import { LicenseObject, ServerObject } from '@novice1/api-doc-generator/lib/gene
 import validatorJoi from '@novice1/validator-joi';
 import Joi from 'joi';
 
+import routing, { RequestHandler, RouteSettings } from '@novice1/routing';
+import * as core from 'express-serve-static-core';
+
+import { ParsedQs } from 'qs';
+
 import { createDocsRouter } from './routers/docs';
 
 
@@ -132,6 +137,40 @@ export class FrameworkStarter extends FrameworkApp {
         this.refreshDocs();
         return result;
     }
+
+    get deco() {
+        // eslint-disable-next-line @typescript-eslint/no-this-alias
+        const app = this;
+        return {
+            get<P = core.ParamsDictionary, 
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                ResBody = any, 
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                ReqBody = any, 
+                ReqQuery = ParsedQs, 
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                Locals extends Record<string, any> = Record<string, any>, 
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                MetaResType = any>(settings: RouteSettings<core.PathParams, P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>) {
+
+                return (controller: RequestHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>, context: ClassMethodDecoratorContext) => {
+                    const methodName = String(context.name);
+
+                    const copy = {...settings}
+
+                    if (typeof copy.name == 'undefined') {
+                        copy.name = methodName
+                    }
+                    if (typeof copy.description == 'undefined') {
+                        copy.description = methodName
+                    }
+
+                    app.get(copy, controller)
+                }
+            },
+
+        }
+    }
 }
 
 /**** TESTS ****/
@@ -163,6 +202,11 @@ const app = new FrameworkStarter({
         }
     }
 });
+
+app.openapi.addServer({
+    url: 'http://localhost:3000'
+})
+
 
 app.get({
     path: '/',
@@ -198,3 +242,26 @@ app.get({
     .listen(3000)
 
 /**** /TESTS ****/
+
+/*** TEST DECORATOR ***/
+class SimpleController {
+
+    @app.deco.get({path: '/decoratorclass', description: 'Serve decorator controller', parameters: {
+        query: {
+            name: Joi.string()
+        }
+    }})
+    static async serveDecorator(req: routing.Request, res: core.Response) {
+        // Downside: cannot use 'this', even in instance method
+        return res.json({message: `Decorator controller: ${req.query.name || ''}`})
+    }
+}
+
+new SimpleController();
+
+
+// needed to refresh docs if routes are registered after build/listen of app
+app.refreshDocs();
+
+
+/*** /TEST DECORATOR ***/
