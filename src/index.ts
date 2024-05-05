@@ -158,9 +158,11 @@ export class FrameworkStarter extends FrameworkApp {
                 )
             }
         }
+
+        this._addDocsRoute();
     }
 
-    protected addDocsRoute() {
+    private _addDocsRoute() {
         this.addRouters(createDocsRouter(this.#docsPath, this.docs))
     }
 
@@ -173,7 +175,6 @@ export class FrameworkStarter extends FrameworkApp {
         createServer(requestListener?: http.RequestListener): http.Server;
         createServer(options: T, requestListener?: http.RequestListener | undefined): http.Server;
     }): http.Server {
-        this.addDocsRoute();
         const result = super.build(options, mod);
         this.refreshDocs();
         return result;
