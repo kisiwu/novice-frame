@@ -1,11 +1,30 @@
 import http from 'http';
-import { FrameworkApp, Options } from '@novice1/app';
+import cookieParser from 'cookie-parser';
+import express, {} from 'express';
+import * as bodyParser from 'body-parser';
+import cors from 'cors';
+import { FrameworkApp, FrameworkOptions, Options } from '@novice1/app';
 import { GroupAuthUtil, OpenAPI, Postman } from '@novice1/api-doc-generator';
 import { LicenseObject, ServerObject } from '@novice1/api-doc-generator/lib/generators/openapi/definitions';
 import validatorJoi from '@novice1/validator-joi';
-import Joi from 'joi';
 
 import { createDocsRouter } from './routers/docs';
+import routing from '@novice1/routing';
+
+export * from '@novice1/app'
+export * from '@novice1/api-doc-generator'
+
+export interface StarterFramworkOptions extends FrameworkOptions {
+    bodyParser?: {
+        json?: bodyParser.OptionsJson
+        urlencoded?: bodyParser.OptionsUrlencoded
+    }
+    cookieParser?: {
+        secret?: string | string[]
+        options?: cookieParser.CookieParseOptions
+    }
+    cors?: cors.CorsOptions | cors.CorsOptionsDelegate<cors.CorsRequest> | boolean
+}
 
 export interface StarterOptions extends Options {
     docs?: {
@@ -15,7 +34,8 @@ export interface StarterOptions extends Options {
         security?: GroupAuthUtil,
         license?: LicenseObject | string,
         host?: ServerObject
-    }
+    },
+    framework?: StarterFramworkOptions
 }
 
 export class FrameworkStarter extends FrameworkApp {
@@ -34,15 +54,43 @@ export class FrameworkStarter extends FrameworkApp {
 
     constructor(config?: StarterOptions) {
 
+        // make sure there is a framework config
+        config = { ...config }
+        config.framework = config.framework || {}
+
+        // add default middlewares
+        config.framework.middlewares =  config.framework.middlewares || []
+        if (config.framework.cors) {
+            config.framework.middlewares.unshift(
+                typeof config.framework.cors == 'boolean' ? cors() : cors(config.framework.cors)
+            );
+        }
+        config.framework.middlewares.unshift(
+            cookieParser(config.framework.cookieParser?.secret, config.framework.cookieParser?.options),
+            express.json(config.framework.bodyParser?.json),
+            express.urlencoded(config.framework.bodyParser?.urlencoded || { extended: true }),
+        )
+
         // add default validator if none was specified
-        if (!config?.framework?.validators?.length) {
-            config = { ...config }
-            config.framework = config.framework || {}
+        if (!config.framework.validators?.length) {
             config.framework.validators = config.framework.validators || []
             config.framework.validators.push(
                 validatorJoi({ stripUnknown: true }, (err, _req, res) => {
                     return res.status(400).json(err);
                 })
+            )
+        }
+
+        // add default routers
+        config.routers =  config.routers || []
+        if (config.framework.cors) {
+            config.routers.unshift(
+                routing().options({
+                    path: '*',
+                    parameters: {
+                        undoc: true
+                    }
+                }, typeof config.framework.cors == 'boolean' ? cors() : cors(config.framework.cors))
             )
         }
 
@@ -131,73 +179,3 @@ export class FrameworkStarter extends FrameworkApp {
         return result;
     }
 }
-
-/**** TESTS ****/
-
-const app = new FrameworkStarter({
-    docs: {
-        host: {
-            url: 'http://{domain}:{port}',
-            description: 'API url for development',
-            variables: {
-                domain: {
-                    default: 'localhost',
-                    description: 'Dev domain'
-                },
-                port: {
-                    enum: [
-                        '3000',
-                        '8000',
-                        '80'
-                    ],
-                    default: '3000'
-                }
-            }
-        },
-        title: '@novice1 API',
-        license: {
-            name: 'ISC',
-            url: 'https://opensource.org/license/isc-license-txt'
-        }
-    }
-});
-
-app.openapi.addServer({
-    url: 'http://localhost:3000'
-})
-
-
-app.get({
-    path: '/',
-    name: 'Homepage',
-    description: 'Serve homepage api',
-}, (_, res) => {
-    res.json({ message: 'hello world' })
-})
-    .get({
-        path: '/username',
-        name: 'Username',
-        description: 'Serve username api',
-        parameters: {
-            query: {
-                name: Joi.string().valid('novice')
-            }
-        }
-    }, (req, res) => {
-        res.json({ message: `Hello ${req.query.name || 'world'}!` })
-    })
-    .get({
-        path: '/user/:name',
-        name: 'Username path',
-        description: 'Serve username path api',
-        parameters: {
-            params: {
-                name: Joi.string().valid('novice').required()
-            }
-        }
-    }, (req, res) => {
-        res.json({ message: `Hello ${req.params.name}!` })
-    })
-    .listen(3000)
-
-/**** /TESTS ****/

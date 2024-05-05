@@ -1,0 +1,10 @@
+[ ] to implement:
+    [x] middlewares
+        [] bodyParser
+        [] cookieParser
+        [] cors
+    [x] validators
+    [x] routers
+        [] cors
+
+
