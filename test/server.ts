@@ -48,7 +48,7 @@ const app = new Frame({
 
 /**
  * To keep registering routes
- * event after launching (listen(...)) the server
+ * even after launching (listen(...)) the server
  */
 const dynamicRouter = app.lazyrouter()
 
@@ -57,7 +57,7 @@ app.openapi.addServer({
 })
 
 
-app.get({
+dynamicRouter.get({
     path: '/',
     name: 'Homepage',
     description: 'Serve homepage api',
@@ -88,16 +88,21 @@ app.get({
         }
     }, (req, res) => {
         res.json({ message: `Hello ${req.params.name}!` })
-    })
-    .use((_, res) => {
+    });
+
+app.use((_, res) => {
         res.status(404).json({message: 'Not found'});
     })
     .listen(3000)
 
-dynamicRouter.get('/end', (_, res) => {
-    res.json({message: 'Bye bye!'});
-})
+// register a route after "app.listen(...)"
+setTimeout(() => {
+    dynamicRouter.get('/end', (_, res) => {
+        res.json({ message: 'Bye bye!' });
+    })
 
-// because we added a route after
-// launching (listen(...)) the server
-app.refreshDocs()
+    // because we added a route after
+    // launching (listen(...)) the server
+    app.refreshDocs()
+}, 10000)
+

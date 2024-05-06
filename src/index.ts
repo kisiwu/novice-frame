@@ -171,6 +171,8 @@ export class Frame extends FrameworkApp {
      * (problem: it adds the same routes multiple time)
      */
     refreshDocs() {
+        this.docs.openapi.removeAll();
+        this.docs.postman.removeAll();
         this.docs.openapi.add(this.meta);
         this.docs.postman.add(this.meta);
     }

@@ -16,7 +16,7 @@
   "author": "demingongo",
   "license": "MIT",
   "dependencies": {
-    "@novice1/api-doc-generator": "^0.1.1",
+    "@novice1/api-doc-generator": "^0.2.1",
     "@novice1/app": "^0.3.2",
     "@novice1/routing": "^1.1.5",
     "@novice1/validator-joi": "^0.1.3",
