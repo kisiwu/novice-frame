@@ -1,5 +1,18 @@
-import { Frame } from '../src/index'
+import { Frame, GrantType, GroupAuthUtil, OAuth2Util } from '../src/index'
 import Joi from 'joi';
+
+const oauth2 = new OAuth2Util('oauth2')
+    .setGrantType(GrantType.implicit)
+    .setDescription('This API uses OAuth 2 with the implicit grant flow. [More info](https://api.example.com/docs/auth)')
+    .setAuthUrl('/oauth2/authorize')
+    .setScopes({
+        read_pets: 'read your pets',
+        write_pets: 'modify pets in your account'
+    });
+
+const security = new GroupAuthUtil([
+    oauth2
+]);
 
 const app = new Frame({
     docs: {
@@ -25,7 +38,8 @@ const app = new Frame({
         license: {
             name: 'ISC',
             url: 'https://opensource.org/license/isc-license-txt'
-        }
+        },
+        security: security
     },
     framework: {
         cors: true
@@ -63,6 +77,7 @@ app.get({
         res.json({ message: `Hello ${req.query.name || 'world'}!` })
     })
     .get({
+        auth: true,
         path: '/user/:name',
         name: 'Username path',
         description: 'Serve username path api',

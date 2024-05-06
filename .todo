@@ -7,4 +7,8 @@
     [x] routers
         [] cors
 
+[o] to fix:
+    [] refreshDocs method: should remove routes from docs before adding again
+        [] cleanup routes
+        [x] add routes
 

@@ -166,6 +166,10 @@ export class Frame extends FrameworkApp {
         this.addRouters(createDocsRouter(this.#docsPath, this.docs))
     }
 
+    /**
+     * @TODO fix refresh for postman
+     * (problem: it adds the same routes multiple time)
+     */
     refreshDocs() {
         this.docs.openapi.add(this.meta);
         this.docs.postman.add(this.meta);
