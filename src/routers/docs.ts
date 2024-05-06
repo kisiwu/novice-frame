@@ -65,6 +65,14 @@ export function createDocsRouter(path: string, { openapi, postman }: { openapi: 
 
             const r = format.result();
 
+            // @TODO: add image 
+            //if (req.query.format != 'postman') {
+            //    r.info['x-logo'] = {
+            //        url: 'https://cdn-icons-png.flaticon.com/512/10169/10169724.png',
+            //        altText: 'API logo'
+            //    }
+            //}
+
             if (!req.query.json && req.query.format != 'postman') {
                 res.set('Content-Type', 'text/plain');
                 return res.send(YAML.stringify(r, 10, 2));

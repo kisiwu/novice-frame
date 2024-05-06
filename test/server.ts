@@ -1,4 +1,4 @@
-import { BearerUtil, Frame, GrantType, GroupAuthUtil, OAuth2Util } from '../src/index'
+import { BearerUtil, Frame, GrantType, GroupAuthUtil, MediaTypeUtil, OAuth2Util, ResponseUtil } from '../src/index'
 import Joi from 'joi';
 
 const oauth2 = new OAuth2Util('oauth2')
@@ -58,6 +58,29 @@ app.openapi.addServer({
     url: 'http://localhost:3000'
 })
 
+app.openapi
+    .addExample('UsernamePathResponseExample', {
+        value: { message: 'Hello novice!' },
+        description: 'The response'
+    })
+    .addSchema('SuccessMessage', {
+        description: 'Confirmation that the operation went well.',
+        type: 'string',
+        example: 'Everything is fine.'
+    })
+    .addSchema('UsernamePathResponse', {
+        description: 'The greeting.',
+        type: 'object',
+        properties: {
+            message: {
+                $ref: '#/components/schemas/SuccessMessage'
+            }
+        },
+        required: [
+            'message'
+        ]
+    })
+
 
 dynamicRouter.get({
     path: '/',
@@ -86,16 +109,42 @@ dynamicRouter.get({
         parameters: {
             //security: bearer, // uncomment if we only want bearer auth for this route
             params: {
-                name: Joi.string().valid('novice').required()
+                name: Joi.string().valid('novice').required().meta({ ref: '#/components/examples/NameParams' })
+            },
+        },
+        /*
+        responses: new GroupResponseUtil([
+            new ResponseUtil('UsernamePathResponse')
+                .setDescription('Success')
+                .setCode(200)
+                .addMediaType('application/json', new MediaTypeUtil({
+                    examples: {
+                        general_output: { $ref: '#/components/examples/UsernamePathResponseExample' }
+                    },
+                    schema: {
+                        $ref: '#/components/schemas/UsernamePathResponse'
+                    }
+                }))
+        ]),
+        */
+        responses: new ResponseUtil('UsernamePathResponse')
+        .setDescription('Success')
+        .setCode(200)
+        .addMediaType('application/json', new MediaTypeUtil({
+            examples: {
+                general_output: { $ref: '#/components/examples/UsernamePathResponseExample' }
+            },
+            schema: {
+                $ref: '#/components/schemas/UsernamePathResponse'
             }
-        }
+        }))
     }, (req, res) => {
         res.json({ message: `Hello ${req.params.name}!` })
     });
 
 app.use((_, res) => {
-        res.status(404).json({message: 'Not found'});
-    })
+    res.status(404).json({ message: 'Not found' });
+})
     .listen(3000)
 
 // register a route after "app.listen(...)"
