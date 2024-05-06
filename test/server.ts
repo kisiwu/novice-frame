@@ -1,7 +1,7 @@
-import {FrameworkStarter} from '../src/index'
+import { Frame } from '../src/index'
 import Joi from 'joi';
 
-const app = new FrameworkStarter({
+const app = new Frame({
     docs: {
         host: {
             url: 'http://{domain}:{port}',

@@ -3,7 +3,7 @@ import cookieParser from 'cookie-parser';
 import express, {} from 'express';
 import * as bodyParser from 'body-parser';
 import cors from 'cors';
-import { FrameworkApp, FrameworkOptions, Options } from '@novice1/app';
+import { FrameworkApp, FrameworkOptions as BaseFrameworkOptions, Options } from '@novice1/app';
 import { GroupAuthUtil, OpenAPI, Postman } from '@novice1/api-doc-generator';
 import { LicenseObject, ServerObject } from '@novice1/api-doc-generator/lib/generators/openapi/definitions';
 import validatorJoi from '@novice1/validator-joi';
@@ -14,7 +14,7 @@ import routing from '@novice1/routing';
 export * from '@novice1/app'
 export * from '@novice1/api-doc-generator'
 
-export interface StarterFramworkOptions extends FrameworkOptions {
+export interface FrameworkOptions extends BaseFrameworkOptions {
     bodyParser?: {
         json?: bodyParser.OptionsJson
         urlencoded?: bodyParser.OptionsUrlencoded
@@ -26,7 +26,7 @@ export interface StarterFramworkOptions extends FrameworkOptions {
     cors?: cors.CorsOptions | cors.CorsOptionsDelegate<cors.CorsRequest> | boolean
 }
 
-export interface StarterOptions extends Options {
+export interface FrameOptions extends Options {
     docs?: {
         path?: string,
         title?: string,
@@ -35,10 +35,10 @@ export interface StarterOptions extends Options {
         license?: LicenseObject | string,
         host?: ServerObject
     },
-    framework?: StarterFramworkOptions
+    framework?: FrameworkOptions
 }
 
-export class FrameworkStarter extends FrameworkApp {
+export class Frame extends FrameworkApp {
 
     #docsPath: string = '/docs'
 
@@ -52,7 +52,7 @@ export class FrameworkStarter extends FrameworkApp {
         return this.docs.postman
     }
 
-    constructor(config?: StarterOptions) {
+    constructor(config?: FrameOptions) {
 
         // make sure there is a framework config
         config = { ...config }

@@ -1,11 +1,13 @@
 {
-  "name": "novice-app-starter",
+  "name": "novice-frame",
   "version": "1.0.0",
   "description": "Web framework for building APIs.",
   "main": "lib/index.js",
   "scripts": {
+    "build": "npm run lint && tsc",
     "dev": "ts-node ./src/index.ts",
-    "test": "ts-node ./tests/server.ts"
+    "lint": "eslint src/**/*.ts",
+    "test": "ts-node ./test/server.ts"
   },
   "keywords": [
     "express",
