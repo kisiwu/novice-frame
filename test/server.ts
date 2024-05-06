@@ -1,16 +1,18 @@
-import { Frame, GrantType, GroupAuthUtil, OAuth2Util } from '../src/index'
+import { BearerUtil, Frame, GrantType, GroupAuthUtil, OAuth2Util } from '../src/index'
 import Joi from 'joi';
 
 const oauth2 = new OAuth2Util('oauth2')
-    .setGrantType(GrantType.implicit)
-    .setDescription('This API uses OAuth 2 with the implicit grant flow. [More info](https://api.example.com/docs/auth)')
+    .setGrantType(GrantType.passwordCredentials)
+    .setDescription('This API uses OAuth 2 with the implicit grant flow. [More info](/docs/redoc)')
     .setAuthUrl('/oauth2/authorize')
     .setScopes({
         read_pets: 'read your pets',
         write_pets: 'modify pets in your account'
     });
+const bearer = new BearerUtil('bearer')
 
 const security = new GroupAuthUtil([
+    bearer,
     oauth2
 ]);
 
@@ -82,6 +84,7 @@ dynamicRouter.get({
         name: 'Username path',
         description: 'Serve username path api',
         parameters: {
+            //security: bearer, // uncomment if we only want bearer auth for this route
             params: {
                 name: Joi.string().valid('novice').required()
             }
