@@ -7,6 +7,7 @@
     [x] routers
         [] cors
     [x] images (x-logo) and x-tagGroups in route /docs/schema for openapi schema
+    [ ] multer and files validation functions
 
 [ ] to fix:
     [x] refreshDocs method: should remove routes from docs before adding again

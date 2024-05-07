@@ -5,7 +5,8 @@ import Joi from 'joi';
 import { examples } from './docs/examples';
 import { schemas } from './docs/schemas';
 import { UsernamePathResponse } from './docs/responses';
-import { security } from './docs/auth';
+import { security } from './docs/security';
+import securityRouter from './routers/security';
 
 const app = new Frame({
     docs: {
@@ -46,13 +47,10 @@ const app = new Frame({
     framework: {
         cors: true
     },
+    routers: [
+        securityRouter
+    ]
 });
-
-/**
- * To keep registering routes
- * even after launching (listen(...)) the server
- */
-const dynamicRouter = app.lazyrouter()
 
 app.openapi
     .addServer({
@@ -60,6 +58,12 @@ app.openapi
     })
     .setExamples(examples)
     .setSchemas(schemas)
+
+/**
+ * To keep registering routes
+ * even after launching (listen(...)) the server
+ */
+const dynamicRouter = app.lazyrouter()
 
 dynamicRouter.get({
     path: '/',
