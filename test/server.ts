@@ -1,20 +1,11 @@
-import { BearerUtil, Frame, GrantType, GroupAuthUtil, MediaTypeUtil, OAuth2Util, ResponseUtil } from '../src/index'
+
+import { ErrorRequestHandler } from 'express';
+import { Frame } from '../src/index'
 import Joi from 'joi';
-
-const oauth2 = new OAuth2Util('oauth2')
-    .setGrantType(GrantType.passwordCredentials)
-    .setDescription('This API uses OAuth 2 with the implicit grant flow. [More info](/docs/redoc)')
-    .setAuthUrl('/oauth2/authorize')
-    .setScopes({
-        read_pets: 'read your pets',
-        write_pets: 'modify pets in your account'
-    });
-const bearer = new BearerUtil('bearer')
-
-const security = new GroupAuthUtil([
-    bearer,
-    oauth2
-]);
+import { examples } from './docs/examples';
+import { schemas } from './docs/schemas';
+import { UsernamePathResponse } from './docs/responses';
+import { security } from './docs/auth';
 
 const app = new Frame({
     docs: {
@@ -41,7 +32,16 @@ const app = new Frame({
             name: 'ISC',
             url: 'https://opensource.org/license/isc-license-txt'
         },
-        security: security
+        security: security,
+        options: {
+            logo: {
+                url: 'https://cdn-icons-png.flaticon.com/512/10169/10169724.png',
+                alt: 'API logo'
+            },
+            tagGroups: {
+                'Test operations': ['Users', 'Test']
+            }
+        }
     },
     framework: {
         cors: true
@@ -54,42 +54,49 @@ const app = new Frame({
  */
 const dynamicRouter = app.lazyrouter()
 
-app.openapi.addServer({
-    url: 'http://localhost:3000'
-})
-
 app.openapi
-    .addExample('UsernamePathResponseExample', {
-        value: { message: 'Hello novice!' },
-        description: 'The response'
+    .addServer({
+        url: 'http://localhost:3000'
     })
-    .addSchema('SuccessMessage', {
-        description: 'Confirmation that the operation went well.',
-        type: 'string',
-        example: 'Everything is fine.'
-    })
-    .addSchema('UsernamePathResponse', {
-        description: 'The greeting.',
-        type: 'object',
-        properties: {
-            message: {
-                $ref: '#/components/schemas/SuccessMessage'
-            }
-        },
-        required: [
-            'message'
-        ]
-    })
-
+    .setExamples(examples)
+    .setSchemas(schemas)
 
 dynamicRouter.get({
     path: '/',
+    tags: 'Test',
     name: 'Homepage',
     description: 'Serve homepage api',
 }, (_, res) => {
     res.json({ message: 'hello world' })
 })
+    .post({
+        auth: true,
+        tags: ['Users'],
+        path: '/user',
+        name: 'Add a user',
+        description: 'Serve username path api',
+        parameters: {
+            onerror: ((): ErrorRequestHandler => {
+                return (err, _req, res) => {
+                    // avoid sending sensitive data (e.g: '_original' from joi validator)
+                    const { _original, ...response } = err
+                    res.status(400).json(response)
+                }
+            })(),
+            body: {
+                username: Joi.string().min(5).max(30).required().example('MySuperUserName'),
+                email: Joi.string().email().required(),
+                password: Joi.string().meta({ format: 'password' }).required(),
+                birth: Joi.date().meta({ format: 'datetime' }).min(new Date(0)),
+                notes: Joi.string().max(5120)
+            },
+            consumes: ['application/json', 'multipart/form-data'],
+        },
+    }, (req, res) => {
+        res.json({ message: 'user added', entity: req.body })
+    })
     .get({
+        tags: ['Users'],
         path: '/username',
         name: 'Username',
         description: 'Serve username api',
@@ -103,41 +110,17 @@ dynamicRouter.get({
     })
     .get({
         auth: true,
+        tags: ['Users'],
         path: '/user/:name',
         name: 'Username path',
         description: 'Serve username path api',
         parameters: {
             //security: bearer, // uncomment if we only want bearer auth for this route
             params: {
-                name: Joi.string().valid('novice').required().meta({ ref: '#/components/examples/NameParams' })
+                name: Joi.string().valid('novice', 'novice1').required()
             },
         },
-        /*
-        responses: new GroupResponseUtil([
-            new ResponseUtil('UsernamePathResponse')
-                .setDescription('Success')
-                .setCode(200)
-                .addMediaType('application/json', new MediaTypeUtil({
-                    examples: {
-                        general_output: { $ref: '#/components/examples/UsernamePathResponseExample' }
-                    },
-                    schema: {
-                        $ref: '#/components/schemas/UsernamePathResponse'
-                    }
-                }))
-        ]),
-        */
-        responses: new ResponseUtil('UsernamePathResponse')
-        .setDescription('Success')
-        .setCode(200)
-        .addMediaType('application/json', new MediaTypeUtil({
-            examples: {
-                general_output: { $ref: '#/components/examples/UsernamePathResponseExample' }
-            },
-            schema: {
-                $ref: '#/components/schemas/UsernamePathResponse'
-            }
-        }))
+        responses: UsernamePathResponse
     }, (req, res) => {
         res.json({ message: `Hello ${req.params.name}!` })
     });

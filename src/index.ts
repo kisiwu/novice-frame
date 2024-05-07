@@ -8,7 +8,7 @@ import { GroupAuthUtil, OpenAPI, Postman } from '@novice1/api-doc-generator';
 import { LicenseObject, ServerObject } from '@novice1/api-doc-generator/lib/generators/openapi/definitions';
 import validatorJoi from '@novice1/validator-joi';
 
-import { createDocsRouter } from './routers/docs';
+import { DocsOptions, createDocsRouter } from './routers/docs';
 import routing from '@novice1/routing';
 
 export * from '@novice1/app'
@@ -26,21 +26,29 @@ export interface FrameworkOptions extends BaseFrameworkOptions {
     cors?: cors.CorsOptions | cors.CorsOptionsDelegate<cors.CorsRequest> | boolean
 }
 
+export interface DocsLogo {
+    url: string
+    alt?: string
+}
+
 export interface FrameOptions extends Options {
     docs?: {
-        path?: string,
-        title?: string,
-        consumes?: string[],
-        security?: GroupAuthUtil,
-        license?: LicenseObject | string,
+        path?: string
+        title?: string
+        consumes?: string[]
+        security?: GroupAuthUtil
+        license?: LicenseObject | string
         host?: ServerObject
-    },
+        options?: DocsOptions
+    }
     framework?: FrameworkOptions
 }
 
 export class Frame extends FrameworkApp {
 
     #docsPath: string = '/docs'
+
+    #docsOptions: DocsOptions = {}
 
     protected docs: { openapi: OpenAPI, postman: Postman }
 
@@ -159,11 +167,15 @@ export class Frame extends FrameworkApp {
             }
         }
 
+        if(config.docs?.options) {
+            this.#docsOptions = config.docs.options
+        }
+
         this._addDocsRoute();
     }
 
     private _addDocsRoute() {
-        this.addRouters(createDocsRouter(this.#docsPath, this.docs))
+        this.addRouters(createDocsRouter(this.#docsPath, this.docs, this.#docsOptions))
     }
 
     /**

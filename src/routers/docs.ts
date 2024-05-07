@@ -3,7 +3,17 @@ import YAML from 'yamljs';
 import swaggerUi from 'swagger-ui-express';
 import { OpenAPI, Postman } from '@novice1/api-doc-generator';
 
-export function createDocsRouter(path: string, { openapi, postman }: { openapi: OpenAPI, postman: Postman }) {
+export interface DocsLogo {
+    url: string
+    alt?: string
+}
+
+export interface DocsOptions {
+    logo?: DocsLogo,
+    tagGroups?: Record<string, string[]>
+}
+
+export function createDocsRouter(path: string, { openapi, postman }: { openapi: OpenAPI, postman: Postman }, options?: DocsOptions) {
     const swaggerUIController: RequestHandler = (req, res, next) => {
         const swaggerDocument = openapi.result()
         return swaggerUi.setup(swaggerDocument)(req, res, next)
@@ -65,13 +75,26 @@ export function createDocsRouter(path: string, { openapi, postman }: { openapi: 
 
             const r = format.result();
 
-            // @TODO: add image 
-            //if (req.query.format != 'postman') {
-            //    r.info['x-logo'] = {
-            //        url: 'https://cdn-icons-png.flaticon.com/512/10169/10169724.png',
-            //        altText: 'API logo'
-            //    }
-            //}
+            if (options && req.query.format != 'postman') {
+                // add logo 
+                if (options.logo?.url) {
+                    r.info['x-logo'] = {
+                        url: options.logo.url,
+                        altText: options.logo.alt
+                    }
+                }
+                // add tag groups 
+                if (options.tagGroups) {
+                    const tagGroups: {name: string, tags: string[]}[] = []
+                    for (const name in options.tagGroups) {
+                        tagGroups.push({
+                            name,
+                            tags: options.tagGroups[name]
+                        })
+                    }
+                    r['x-tagGroups'] = tagGroups
+                }
+            }
 
             if (!req.query.json && req.query.format != 'postman') {
                 res.set('Content-Type', 'text/plain');

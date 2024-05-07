@@ -6,7 +6,7 @@
     [x] validators
     [x] routers
         [] cors
-    [ ] images (x-logo) and x-tagGroups in route /docs/schema for openapi schema
+    [x] images (x-logo) and x-tagGroups in route /docs/schema for openapi schema
 
 [ ] to fix:
     [x] refreshDocs method: should remove routes from docs before adding again
