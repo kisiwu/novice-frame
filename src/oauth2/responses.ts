@@ -1,27 +1,16 @@
-export type OAuth2Error = 'invalid_request' | 'invalid_client' | 'invalid_grant' | 'invalid_scope' | 'unauthorized_client' | 'unsupported_grant_type'
+export type OAuth2Error = 'invalid_request' | 'invalid_client' | 'invalid_grant' | 'invalid_scope' | 'unauthorized_client' | 'unsupported_grant_type' | 'invalid_token'
 
-export class OAuth2ErrorResponse {
-
-    protected error: OAuth2Error
+export abstract class BaseOAuth2ErrorResponse {
+    protected abstract error: OAuth2Error
     protected errorDescription?: string
     protected errorUri?: string
 
-
-    constructor(error: OAuth2Error, errorDescription?: string, errorUri?: string) {
-        this.error = error
+    constructor(errorDescription?: string, errorUri?: string) {
         this.errorDescription = errorDescription
         this.errorUri = errorUri
     }
 
-    setError(value: OAuth2Error): OAuth2ErrorResponse {
-        this.error = value
-        return this;
-    }
-    getError(): string {
-        return this.error;
-    }
-
-    setErrorDescription(value?: string): OAuth2ErrorResponse {
+    setErrorDescription(value?: string): BaseOAuth2ErrorResponse {
         this.errorDescription = value
         return this;
     }
@@ -29,7 +18,7 @@ export class OAuth2ErrorResponse {
         return this.errorDescription;
     }
 
-    setErrorUri(value?: string): OAuth2ErrorResponse {
+    setErrorUri(value?: string): BaseOAuth2ErrorResponse {
         this.errorUri = value
         return this;
     }
@@ -50,6 +39,57 @@ export class OAuth2ErrorResponse {
     }
 }
 
+export class OAuth2ErrorResponse extends BaseOAuth2ErrorResponse {
+
+    protected error: OAuth2Error
+
+    constructor(error: OAuth2Error, errorDescription?: string, errorUri?: string) {
+        super(errorDescription, errorUri)
+        this.error = error
+    }
+}
+
+export class OAuth2InvalidRequestResponse extends OAuth2ErrorResponse {
+    constructor(errorDescription?: string, errorUri?: string) {
+        super('invalid_request', errorDescription, errorUri)
+    }
+}
+
+export class OAuth2InvalidClientResponse extends OAuth2ErrorResponse {
+    constructor(errorDescription?: string, errorUri?: string) {
+        super('invalid_client', errorDescription, errorUri)
+    }
+}
+
+export class OAuth2InvalidGrantResponse extends OAuth2ErrorResponse {
+    constructor(errorDescription?: string, errorUri?: string) {
+        super('invalid_grant', errorDescription, errorUri)
+    }
+}
+
+export class OAuth2InvalidScopeResponse extends OAuth2ErrorResponse {
+    constructor(errorDescription?: string, errorUri?: string) {
+        super('invalid_scope', errorDescription, errorUri)
+    }
+}
+
+export class OAuth2UnauthorizedClientResponse extends OAuth2ErrorResponse {
+    constructor(errorDescription?: string, errorUri?: string) {
+        super('unauthorized_client', errorDescription, errorUri)
+    }
+}
+
+export class OAuth2UnsupportedGrantTypeResponse extends OAuth2ErrorResponse {
+    constructor(errorDescription?: string, errorUri?: string) {
+        super('unsupported_grant_type', errorDescription, errorUri)
+    }
+}
+
+export class OAuth2InvalidTokenResponse extends OAuth2ErrorResponse {
+    constructor(errorDescription?: string, errorUri?: string) {
+        super('invalid_token', errorDescription, errorUri)
+    }
+}
 
 export class OAuth2TokenResponse {
 

@@ -1,7 +1,7 @@
 import routing from '@novice1/routing'
 import * as core from 'express-serve-static-core'
 import { ParsedQs } from 'qs'
-import { OAuth2Error, OAuth2ErrorResponse } from './responses'
+import { OAuth2Error, OAuth2ErrorResponse, OAuth2UnauthorizedClientResponse } from './responses'
 
 export interface OAuth2ACAuthorizationParams {
     clientId: string
@@ -209,7 +209,7 @@ export class OAuth2ACRouterBuilder {
                 if (this.methods.tokenPost) {
                     return this.methods.tokenPost(params, req, res, next)
                 } else {
-                    return res.status(400).json(new OAuth2ErrorResponse('unauthorized_client'))
+                    return res.status(400).json(new OAuth2UnauthorizedClientResponse())
                 }
             } else {
                 let error: OAuth2Error = 'unauthorized_client';
