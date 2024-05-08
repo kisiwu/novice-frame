@@ -134,14 +134,17 @@ app.use((_, res) => {
 })
     .listen(3000)
 
+
+
 // register a route after "app.listen(...)"
 setTimeout(() => {
     dynamicRouter.get('/end', (_, res) => {
+
         res.json({ message: 'Bye bye!' });
     })
 
     // because we added a route after
     // launching (listen(...)) the server
     app.refreshDocs()
-}, 10000)
+}, 2000)
 

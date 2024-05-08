@@ -1,5 +1,6 @@
 import routing from '@novice1/routing'
 import Joi from 'joi';
+import { OAuth2TokenResponse } from '../../src';
 
 const router = routing()
 
@@ -26,13 +27,11 @@ router.post({
   }, (_, res) => {
     // validate and send token
 
-    const response = {
-        access_token: 'fake_token',
-        token_type: 'bearer',
-        expires_in: 3600, // in seconds
-        refresh_token: 'fake_refresh_Token',
-    }
-    return res.json(response)
+    return res.json(
+      new OAuth2TokenResponse('fake_token', 'bearer')
+        .setExpiresIn(3600)
+        .setRefreshToken('fake_refresh_Token')
+    )
   })
 
 export default router

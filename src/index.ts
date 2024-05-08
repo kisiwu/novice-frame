@@ -13,6 +13,8 @@ import routing from '@novice1/routing';
 
 export * from '@novice1/app'
 export * from '@novice1/api-doc-generator'
+export * from './oauth2/authorizationCode'
+export * from './oauth2/responses'
 
 export interface FrameworkOptions extends BaseFrameworkOptions {
     bodyParser?: {
