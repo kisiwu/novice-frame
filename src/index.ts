@@ -4,7 +4,8 @@ import express, {} from 'express';
 import * as bodyParser from 'body-parser';
 import cors from 'cors';
 import { FrameworkApp, FrameworkOptions as BaseFrameworkOptions, Options } from '@novice1/app';
-import { GroupAuthUtil, OpenAPI, Postman } from '@novice1/api-doc-generator';
+import { OpenAPI, Postman } from '@novice1/api-doc-generator';
+import { BaseAuthUtil } from '@novice1/api-doc-generator/lib/utils/auth/all';
 import { LicenseObject, ServerObject } from '@novice1/api-doc-generator/lib/generators/openapi/definitions';
 import validatorJoi from '@novice1/validator-joi';
 
@@ -13,8 +14,7 @@ import routing from '@novice1/routing';
 
 export * from '@novice1/app'
 export * from '@novice1/api-doc-generator'
-export * from './oauth2/authorizationCode'
-export * from './oauth2/responses'
+export * from './oauth2/all'
 
 export interface FrameworkOptions extends BaseFrameworkOptions {
     bodyParser?: {
@@ -38,7 +38,7 @@ export interface FrameOptions extends Options {
         path?: string
         title?: string
         consumes?: string[]
-        security?: GroupAuthUtil
+        security?: BaseAuthUtil
         license?: LicenseObject | string
         host?: ServerObject
         options?: DocsOptions

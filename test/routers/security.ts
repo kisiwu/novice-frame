@@ -1,9 +1,8 @@
-/*
+
 import routing from '@novice1/routing'
 import Joi from 'joi';
-*/
-import { OAuth2ACAuthorizationRoute, OAuth2ACRouterBuilder, OAuth2ACTokenRoute/*, OAuth2TokenResponse*/ } from '../../src/oauth2/authorizationCode';
-/*
+import {OAuth2TokenResponse} from '../../src'
+
 const router = routing()
 
 router.post({
@@ -37,19 +36,3 @@ router.post({
 })
 
 export default router
-*/
-
-const builder = new OAuth2ACRouterBuilder(
-  new OAuth2ACAuthorizationRoute('/oauth2/v1/authorization', (params, req, res) => {
-    console.log(params);
-    console.log(req.query);
-    res.status(501).json({message: 'not implemented'})
-  }, (params, req, res) => {
-    console.log(params);
-    console.log(req.query);
-    res.status(501).json({message: 'not implemented'})
-  }),
-  new OAuth2ACTokenRoute('/oauth2/v1/token')
-)
-
-export default builder.build()
