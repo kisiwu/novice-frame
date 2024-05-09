@@ -21,7 +21,23 @@ export interface OAuth2ACTokenParams {
     redirectUri?: string
 }
 
-export interface OAuth2ACAuthorizationMethod<
+export interface OAuth2ACRefreshTokenParams {
+    grantType: string
+    clientId: string
+    clientSecret: string
+    refreshToken: string
+}
+
+export interface OAuth2ACHandler {
+    (
+        params: OAuth2ACAuthorizationParams | OAuth2ACTokenParams | OAuth2ACRefreshTokenParams,
+        req: routing.Request,
+        res: core.Response,
+        next: core.NextFunction,
+    ): void;
+}
+
+export interface OAuth2ACAuthorizationHandler<
     P = core.ParamsDictionary,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ResBody = any,
@@ -32,7 +48,7 @@ export interface OAuth2ACAuthorizationMethod<
     Locals extends Record<string, any> = Record<string, any>,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     MetaResType = any
-> {
+> extends OAuth2ACHandler {
     // tslint:disable-next-line callable-types (This is extended from and can't extend from a type alias in ts<2.2)
     (
         params: OAuth2ACAuthorizationParams,
@@ -42,7 +58,155 @@ export interface OAuth2ACAuthorizationMethod<
     ): void;
 }
 
-export interface OAuth2ACTokenMethod<
+export interface OAuth2ACTokenHandler<
+    P = core.ParamsDictionary,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ResBody = any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ReqBody = any,
+    ReqQuery = ParsedQs,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Locals extends Record<string, any> = Record<string, any>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    MetaResType = any
+> extends OAuth2ACHandler {
+    // tslint:disable-next-line callable-types (This is extended from and can't extend from a type alias in ts<2.2)
+    (
+        params: OAuth2ACTokenParams,
+        req: routing.Request<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>,
+        res: core.Response<ResBody, Locals>,
+        next: core.NextFunction,
+    ): void;
+}
+
+export interface OAuth2ACRefreshTokenHandler<
+    P = core.ParamsDictionary,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ResBody = any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ReqBody = any,
+    ReqQuery = ParsedQs,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Locals extends Record<string, any> = Record<string, any>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    MetaResType = any
+> extends OAuth2ACHandler {
+    // tslint:disable-next-line callable-types (This is extended from and can't extend from a type alias in ts<2.2)
+    (
+        params: OAuth2ACRefreshTokenParams,
+        req: routing.Request<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>,
+        res: core.Response<ResBody, Locals>,
+        next: core.NextFunction,
+    ): void;
+}
+
+export interface OAuth2ACUrls {
+    authorizationUrl: string
+    tokenUrl: string
+    refreshTokenUrl?: string
+
+}
+
+export interface IOAuth2ACRoute {
+    getUrl(): string
+    getHandler(): OAuth2ACHandler | undefined
+}
+
+export class OAuth2ACAuthorizationRoute<
+    P = core.ParamsDictionary,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ResBody = any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ReqBody = any,
+    ReqQuery = ParsedQs,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Locals extends Record<string, any> = Record<string, any>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    MetaResType = any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    PostResBody = any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    PostReqBody = any,
+    PostReqQuery = ParsedQs,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    PostLocals extends Record<string, any> = Record<string, any>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    PostMetaResType = any
+> implements IOAuth2ACRoute {
+    protected url: string
+    protected handler?: OAuth2ACAuthorizationHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>
+    protected postHandler?: OAuth2ACAuthorizationHandler<P, PostResBody, PostReqBody, PostReqQuery, PostLocals, PostMetaResType>
+
+    constructor(
+        url: string, 
+        handler?: OAuth2ACAuthorizationHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>,
+        postHandler?: OAuth2ACAuthorizationHandler<P, PostResBody, PostReqBody, PostReqQuery, PostLocals, PostMetaResType>
+    ) {
+        this.url = url
+        this.handler = handler
+        this.postHandler = postHandler
+    }
+
+    getUrl(): string {
+        return this.url
+    }
+
+    setHandler(handler?: OAuth2ACAuthorizationHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>):
+        OAuth2ACAuthorizationRoute<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType, PostResBody, PostReqBody, PostReqQuery, PostLocals, PostMetaResType> {
+        this.handler = handler
+        return this
+    }
+
+    setPostHandler(postHandler?: OAuth2ACAuthorizationHandler<P, PostResBody, PostReqBody, PostReqQuery, PostLocals, PostMetaResType>):
+        OAuth2ACAuthorizationRoute<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType, PostResBody, PostReqBody, PostReqQuery, PostLocals, PostMetaResType> {
+        this.postHandler = postHandler
+        return this
+    }
+
+    getHandler(): OAuth2ACAuthorizationHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType> | undefined {
+        return this.handler
+    }
+
+    getPostHandler(): OAuth2ACAuthorizationHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType> | undefined {
+        return this.handler
+    }
+}
+
+export class OAuth2ACTokenRoute<
+    P = core.ParamsDictionary,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ResBody = any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ReqBody = any,
+    ReqQuery = ParsedQs,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Locals extends Record<string, any> = Record<string, any>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    MetaResType = any
+> implements IOAuth2ACRoute {
+    protected url: string
+    protected handler?: OAuth2ACTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>
+
+    constructor(url: string, handler?: OAuth2ACTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>) {
+        this.url = url
+        this.handler = handler
+    }
+
+    getUrl(): string {
+        return this.url
+    }
+
+    setHandler(handler?: OAuth2ACTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>): OAuth2ACTokenRoute<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType> {
+        this.handler = handler
+        return this
+    }
+
+    getHandler(): OAuth2ACTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType> | undefined {
+        return this.handler
+    }
+}
+
+export class OAuth2ACRefreshTokenRoute<
     P = core.ParamsDictionary,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ResBody = any,
@@ -54,75 +218,66 @@ export interface OAuth2ACTokenMethod<
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     MetaResType = any
 > {
-    // tslint:disable-next-line callable-types (This is extended from and can't extend from a type alias in ts<2.2)
-    (
-        params: OAuth2ACTokenParams,
-        req: routing.Request<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>,
-        res: core.Response<ResBody, Locals>,
-        next: core.NextFunction,
-    ): void;
-}
+    protected url: string
+    protected handler?: OAuth2ACRefreshTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>
 
-export interface OAuth2ACUrls {
-    authorizationUrl?: string
-    refreshTokenUrl?: string
-    tokenUrl?: string
-}
+    constructor(url: string, handler?: OAuth2ACRefreshTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>) {
+        this.url = url
+        this.handler = handler
+    }
 
-export interface OAuth2ACMethods {
-    authorizationGet?: OAuth2ACAuthorizationMethod
-    authorizationPost?: OAuth2ACAuthorizationMethod
-    refreshTokenPost?: OAuth2ACAuthorizationMethod
-    tokenPost?: OAuth2ACTokenMethod
+    getUrl(): string {
+        return this.url
+    }
+
+    setHandler(handler?: OAuth2ACRefreshTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>): OAuth2ACRefreshTokenRoute<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType> {
+        this.handler = handler
+        return this
+    }
+
+    getHandler(): OAuth2ACRefreshTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType> | undefined {
+        return this.handler
+    }
 }
 
 export class OAuth2ACRouterBuilder {
 
-    static readonly authorizationUrl = '/oauth2/authorization'
-    static readonly refreshTokenUrl = '/oauth2/refresh_token'
-    static readonly tokenUrl = '/oauth2/token'
+    //static readonly authorizationUrl = '/oauth2/authorization'
+    //static readonly tokenUrl = '/oauth2/token'
 
-    protected urls: Required<OAuth2ACUrls>
+    protected authorizationRoute: OAuth2ACAuthorizationRoute
+    protected tokenRoute: IOAuth2ACRoute
+    protected refreshTokenRoute?: IOAuth2ACRoute
 
-    protected methods: OAuth2ACMethods
-
-    constructor() {
-        this.methods = {}
-        this.urls = {
-            authorizationUrl: OAuth2ACRouterBuilder.authorizationUrl,
-            refreshTokenUrl: OAuth2ACRouterBuilder.refreshTokenUrl,
-            tokenUrl: OAuth2ACRouterBuilder.tokenUrl
-        }
-    }
-
-    setAuthorizationUrl(authorizationUrl: string): OAuth2ACRouterBuilder {
-        this.urls.authorizationUrl = authorizationUrl
-        return this
-    }
-
-    setRefreshTokenUrl(refreshTokenUrl: string): OAuth2ACRouterBuilder {
-        this.urls.refreshTokenUrl = refreshTokenUrl
-        return this
-    }
-
-    setTokenUrl(tokenUrl: string): OAuth2ACRouterBuilder {
-        this.urls.tokenUrl = tokenUrl
-        return this
+    constructor(
+        authorizationRoute: OAuth2ACAuthorizationRoute,
+        tokenRoute: IOAuth2ACRoute,
+        refreshTokenRoute?: IOAuth2ACRoute
+    ) {
+        this.authorizationRoute = authorizationRoute
+        this.tokenRoute = tokenRoute
+        this.refreshTokenRoute = refreshTokenRoute
     }
 
     getAuthorizationUrl(): string {
-        return this.urls.authorizationUrl
+        return this.authorizationRoute.getUrl()
     }
 
-    getRefreshTokenUrl(): string {
-        return this.urls.refreshTokenUrl
+    getRefreshTokenUrl(): string | undefined {
+        return this.refreshTokenRoute?.getUrl()
     }
 
     getTokenUrl(): string {
-        return this.urls.tokenUrl
+        return this.tokenRoute.getUrl()
     }
 
     build(): routing.IRouter {
+
+        const authorizationUrl = this.getAuthorizationUrl();
+        const tokenUrl = this.getTokenUrl();
+        const refreshTokenUrl = this.getRefreshTokenUrl();
+
+
         const router = routing()
 
         // authorizationUrl
@@ -148,14 +303,21 @@ export class OAuth2ACRouterBuilder {
                 }
 
                 if (req.method.toLowerCase() === 'get') {
-                    if (this.methods.authorizationGet) {
-                        return this.methods.authorizationGet(params, req, res, next)
+                    //if (this.methods.authorizationGet) {
+                    //    return this.methods.authorizationGet(params, req, res, next)
+                    //} else {
+                    //    return res.status(401).send('<h1>OAuth Error</h1><p>Authorization unavailable</p>')
+                    //}
+                    const handler = this.authorizationRoute.getHandler()
+                    if (handler) {
+                        return handler(params, req, res, next)
                     } else {
                         return res.status(401).send('<h1>OAuth Error</h1><p>Authorization unavailable</p>')
                     }
                 } else {
-                    if (this.methods.authorizationPost) {
-                        return this.methods.authorizationPost(params, req, res, next)
+                    const handler = this.authorizationRoute.getPostHandler()
+                    if (handler) {
+                        return handler(params, req, res, next)
                     } else {
                         return res.status(401).send('<h1>OAuth Error</h1><p>Authorization post unavailable</p>')
                     }
@@ -166,13 +328,13 @@ export class OAuth2ACRouterBuilder {
         };
         router
             .get({
-                path: this.urls.authorizationUrl,
+                path: authorizationUrl,
                 parameters: {
                     undoc: true
                 }
             }, authorizationController)
             .post({
-                path: this.urls.authorizationUrl,
+                path: authorizationUrl,
                 parameters: {
                     undoc: true
                 }
@@ -180,7 +342,7 @@ export class OAuth2ACRouterBuilder {
 
         // tokenUrl
         router.post({
-            path: this.urls.tokenUrl,
+            path: tokenUrl,
             parameters: {
                 undoc: true
             }
@@ -206,17 +368,56 @@ export class OAuth2ACRouterBuilder {
                     params.redirectUri = req.body.redirect_uri
                 }
 
-                if (this.methods.tokenPost) {
-                    return this.methods.tokenPost(params, req, res, next)
+                const handler = this.tokenRoute.getHandler()
+                if (handler) {
+                    return handler(params, req, res, next)
                 } else {
                     return res.status(400).json(new OAuth2UnauthorizedClientResponse())
+                }
+            } else if (
+                refreshTokenUrl == tokenUrl &&
+                req.body.grant_type === 'refresh_token'
+            ) {
+                if (
+                    req.body.client_id && typeof req.body.client_id === 'string' &&
+                    req.body.client_secret && typeof req.body.client_secret === 'string' &&
+                    req.body.refresh_token && typeof req.body.refresh_token === 'string'
+                ) {
+                    const params: OAuth2ACRefreshTokenParams = {
+                        clientId: req.body.client_id,
+                        clientSecret: req.body.client_secret,
+                        grantType: req.body.grant_type,
+                        refreshToken: req.body.refresh_token
+                    }
+
+                    const handler = this.refreshTokenRoute?.getHandler()
+                    if (handler) {
+                        return handler(params, req, res, next)
+                    } else {
+                        return res.status(400).json(new OAuth2UnauthorizedClientResponse())
+                    }
+                } else {
+                    let error: OAuth2Error = 'unauthorized_client';
+                    let errorDescription = ''
+                    if (!(req.body.client_id && typeof req.body.client_id === 'string')) {
+                        error = 'invalid_request'
+                        errorDescription = 'Request was missing the \'client_id\' parameter.'
+                    } else if (!(req.body.client_secret && typeof req.body.client_secret === 'string')) {
+                        error = 'invalid_request'
+                        errorDescription = 'Request was missing the \'client_secret\' parameter.'
+                    } else if (!(req.body.refresh_token && typeof req.body.refresh_token === 'string')) {
+                        error = 'invalid_request'
+                        errorDescription = 'Request was missing the \'refresh_token\' parameter.'
+                    }
+                    return res.status(400).json(new OAuth2ErrorResponse(error, errorDescription))
                 }
             } else {
                 let error: OAuth2Error = 'unauthorized_client';
                 let errorDescription = ''
-                if (req.body.grant_type != 'authorization_code') {
+                if (req.body.grant_type != 'authorization_code' || !(refreshTokenUrl == tokenUrl &&
+                    req.body.grant_type === 'refresh_token')) {
                     error = 'unsupported_grant_type'
-                    errorDescription = 'Request expected the \'grant_type\' parameter to equal \'authorization_code\'.'
+                    errorDescription = `Request does not support the 'grant_type' '${req.body.grant_type}'.`
                 } else if (!(req.body.client_id && typeof req.body.client_id === 'string')) {
                     error = 'invalid_request'
                     errorDescription = 'Request was missing the \'client_id\' parameter.'
@@ -227,6 +428,55 @@ export class OAuth2ACRouterBuilder {
                 return res.status(400).json(new OAuth2ErrorResponse(error, errorDescription))
             }
         });
+
+        // refreshToken
+        if (refreshTokenUrl && refreshTokenUrl != tokenUrl) {
+            router.post({
+                path: refreshTokenUrl,
+                parameters: {
+                    undoc: true
+                }
+            }, (req, res, next) => {
+                // validating body
+                if (
+                    req.body.client_id && typeof req.body.client_id === 'string' &&
+                    req.body.client_secret && typeof req.body.client_secret === 'string' &&
+                    req.body.refresh_token && typeof req.body.refresh_token === 'string' &&
+                    req.body.grant_type === 'refresh_token'
+                ) {
+                    const params: OAuth2ACRefreshTokenParams = {
+                        clientId: req.body.client_id,
+                        clientSecret: req.body.client_secret,
+                        grantType: req.body.grant_type,
+                        refreshToken: req.body.refresh_token
+                    }
+
+                    const handler = this.refreshTokenRoute?.getHandler()
+                    if (handler) {
+                        return handler(params, req, res, next)
+                    } else {
+                        return res.status(400).json(new OAuth2UnauthorizedClientResponse())
+                    }
+                } else {
+                    let error: OAuth2Error = 'unauthorized_client';
+                    let errorDescription = ''
+                    if (req.body.grant_type != 'refresh_token') {
+                        error = 'unsupported_grant_type'
+                        errorDescription = `Request does not support the 'grant_type' '${req.body.grant_type}'.`
+                    } else if (!(req.body.client_id && typeof req.body.client_id === 'string')) {
+                        error = 'invalid_request'
+                        errorDescription = 'Request was missing the \'client_id\' parameter.'
+                    } else if (!(req.body.client_secret && typeof req.body.client_secret === 'string')) {
+                        error = 'invalid_request'
+                        errorDescription = 'Request was missing the \'client_secret\' parameter.'
+                    } else if (!(req.body.refresh_token && typeof req.body.refresh_token === 'string')) {
+                        error = 'invalid_request'
+                        errorDescription = 'Request was missing the \'refresh_token\' parameter.'
+                    }
+                    return res.status(400).json(new OAuth2ErrorResponse(error, errorDescription))
+                }
+            });
+        }
 
         return router
     }
