@@ -14,7 +14,7 @@ import routing from '@novice1/routing';
 
 export * from '@novice1/app'
 export * from '@novice1/api-doc-generator'
-export * from './oauth2/all'
+export * from './security'
 
 export interface FrameworkOptions extends BaseFrameworkOptions {
     bodyParser?: {
