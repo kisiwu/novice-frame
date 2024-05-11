@@ -1,4 +1,4 @@
-import { ClientAuthentication, GrantType, OAuth2Util } from '@novice1/api-doc-generator'
+import { GrantType, OAuth2Util } from '@novice1/api-doc-generator'
 import { OAuth2Error, OAuth2ErrorResponse, OAuth2InvalidRequestResponse, OAuth2UnauthorizedClientResponse } from './responses'
 import * as core from 'express-serve-static-core'
 import { ParsedQs } from 'qs'
@@ -7,16 +7,14 @@ import { IOAuth2Route, OAuth2Handler, OAuth2RefreshTokenParams, OAuth2RefreshTok
 import { OAuth2Builder } from '../builder'
 import { BaseAuthUtil } from '@novice1/api-doc-generator/lib/utils/auth/baseAuthUtils'
 
-export interface OAuth2PasswordTokenParams {
+export interface OAuth2ClientCredsTokenParams {
     grantType: string
     clientId: string
     clientSecret: string
-    username: string
-    password: string
     scope?: string
 }
 
-export interface OAuth2PasswordTokenHandler<
+export interface OAuth2ClientCredsTokenHandler<
     P = core.ParamsDictionary,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ResBody = any,
@@ -27,10 +25,10 @@ export interface OAuth2PasswordTokenHandler<
     Locals extends Record<string, any> = Record<string, any>,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     MetaResType = any
-> extends OAuth2Handler<OAuth2PasswordTokenParams> {
+> extends OAuth2Handler<OAuth2ClientCredsTokenParams> {
     // tslint:disable-next-line callable-types (This is extended from and can't extend from a type alias in ts<2.2)
     (
-        params: OAuth2PasswordTokenParams,
+        params: OAuth2ClientCredsTokenParams,
         req: routing.Request<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>,
         res: core.Response<ResBody, Locals>,
         next: core.NextFunction,
@@ -38,7 +36,7 @@ export interface OAuth2PasswordTokenHandler<
 }
 
 
-export class OAuth2PasswordTokenRoute<
+export class OAuth2ClientCredsTokenRoute<
     P = core.ParamsDictionary,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ResBody = any,
@@ -51,9 +49,9 @@ export class OAuth2PasswordTokenRoute<
     MetaResType = any
 > implements IOAuth2Route {
     protected url: string
-    protected handler?: OAuth2PasswordTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>
+    protected handler?: OAuth2ClientCredsTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>
 
-    constructor(url: string, handler?: OAuth2PasswordTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>) {
+    constructor(url: string, handler?: OAuth2ClientCredsTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>) {
         this.url = url
         this.handler = handler
     }
@@ -62,46 +60,28 @@ export class OAuth2PasswordTokenRoute<
         return this.url
     }
 
-    setHandler(handler?: OAuth2PasswordTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>): OAuth2PasswordTokenRoute<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType> {
+    setHandler(handler?: OAuth2ClientCredsTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>): OAuth2ClientCredsTokenRoute<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType> {
         this.handler = handler
         return this
     }
 
-    getHandler(): OAuth2PasswordTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType> | undefined {
+    getHandler(): OAuth2ClientCredsTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType> | undefined {
         return this.handler
     }
 }
 
-export class OAuth2PasswordBuilder extends OAuth2Builder {
+export class OAuth2ClientCredsBuilder extends OAuth2Builder {
     protected tokenRoute: IOAuth2Route
     protected refreshTokenRoute?: IOAuth2Route
 
-    protected clientAuthentication: ClientAuthentication = ClientAuthentication.body
-
     constructor(
         securitySchemeName: string,
-        tokenRoute: OAuth2PasswordTokenRoute,
+        tokenRoute: OAuth2ClientCredsTokenRoute,
         refreshTokenRoute?: OAuth2RefreshTokenRoute
     ) {
         super(securitySchemeName)
         this.tokenRoute = tokenRoute
         this.refreshTokenRoute = refreshTokenRoute
-    }
-
-    clientAuthenticationToBody(): this {
-        this.clientAuthentication = ClientAuthentication.body
-        return this
-    }
-    isClientAuthenticationToBody(): boolean {
-        return this.clientAuthentication == ClientAuthentication.body
-    }
-
-    clientAuthenticationToHeader(): this {
-        this.clientAuthentication = ClientAuthentication.header
-        return this
-    }
-    isClientAuthenticationToHeader(): boolean {
-        return this.clientAuthentication == ClientAuthentication.header
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -136,30 +116,19 @@ export class OAuth2PasswordBuilder extends OAuth2Builder {
         }, (req, res, next) => {
             // validating body
             if (
-                req.body.username && typeof req.body.username === 'string' &&
-                req.body.password && typeof req.body.password === 'string' &&
-                req.body.grant_type === 'password'
+                req.body.grant_type === 'client_credentials'
             ) {
                 let clientId: string,
                     clientSecret: string,
                     tmpClientId: string | undefined,
                     tmpClientSecret: string | undefined;
 
-                if (this.isClientAuthenticationToBody()) {
-                    if (typeof req.body.client_id === 'string') {
-                        tmpClientId = req.body.client_id
-                    }
-                    if (typeof req.body.client_secret === 'string') {
-                        tmpClientSecret = req.body.client_secret
-                    }
-                } else if (this.isClientAuthenticationToHeader()) {
-                    const authHeaderValue = req.header('authorization')
-                    if (authHeaderValue) {
-                        // remove 'Basic ' and convert the base64 to string
-                        const value = Buffer.from(authHeaderValue.substring(5), 'base64').toString();
-                        // split client_id and client_secret from string
-                        [tmpClientId, tmpClientSecret] = value.split(':')
-                    }
+                const authHeaderValue = req.header('authorization')
+                if (authHeaderValue) {
+                    // remove 'Basic ' and convert the base64 to string
+                    const value = Buffer.from(authHeaderValue.substring(5), 'base64').toString();
+                    // split client_id and client_secret from string
+                    [tmpClientId, tmpClientSecret] = value.split(':')
                 }
 
                 if (tmpClientId) {
@@ -172,12 +141,10 @@ export class OAuth2PasswordBuilder extends OAuth2Builder {
                 } else {
                     return res.status(400).json(new OAuth2InvalidRequestResponse('Request was missing the \'client_secret\' parameter.'))
                 }
-                const params: OAuth2PasswordTokenParams = {
+                const params: OAuth2ClientCredsTokenParams = {
                     clientId: clientId,
                     clientSecret: clientSecret,
-                    grantType: req.body.grant_type,
-                    username: req.body.username,
-                    password: req.body.password,
+                    grantType: req.body.grant_type
                 }
                 if (req.body.scope && typeof req.body.scope === 'string') {
                     params.scope = req.body.scope
@@ -229,18 +196,12 @@ export class OAuth2PasswordBuilder extends OAuth2Builder {
             } else {
                 let error: OAuth2Error = 'unauthorized_client';
                 let errorDescription = ''
-                if (req.body.grant_type != 'password' || (refreshTokenUrl == tokenUrl &&
+                if (req.body.grant_type != 'client_credentials' || (refreshTokenUrl == tokenUrl &&
                     req.body.grant_type != 'refresh_token')) {
                     error = 'unsupported_grant_type'
                     errorDescription = `Request does not support the 'grant_type' '${req.body.grant_type}'.`
-                } else if (!(req.body.username && typeof req.body.username === 'string')) {
-                    error = 'invalid_request'
-                    errorDescription = 'Request was missing the \'username\' parameter.'
-                } else if (!(req.body.password && typeof req.body.password === 'string')) {
-                    error = 'invalid_request'
-                    errorDescription = 'Request was missing the \'client_secret\' parameter.'
                 }
-                req.body.grant_type === 'password'
+                req.body.grant_type === 'client_credentials'
                 return res.status(400).json(new OAuth2ErrorResponse(error, errorDescription))
             }
         });
@@ -299,10 +260,9 @@ export class OAuth2PasswordBuilder extends OAuth2Builder {
 
     buildDoc(): BaseAuthUtil {
         const docs = new OAuth2Util(this.securitySchemeName)
-            .setGrantType(GrantType.passwordCredentials)
+            .setGrantType(GrantType.clientCredentials)
             .setScopes(this.getScopes() || {})
-            .setAccessTokenUrl(this.tokenRoute.getUrl())
-            .setClientAuthentication(this.clientAuthentication);
+            .setAccessTokenUrl(this.tokenRoute.getUrl());
 
         if (this.description) {
             docs.setDescription(this.description)
