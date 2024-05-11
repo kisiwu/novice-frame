@@ -4,6 +4,8 @@ import { ParsedQs } from 'qs'
 import { OAuth2Error, OAuth2ErrorResponse, OAuth2UnauthorizedClientResponse } from './responses'
 import { GrantType, OAuth2Util } from '@novice1/api-doc-generator'
 import { IOAuth2Route, OAuth2Handler, OAuth2RefreshTokenParams, OAuth2RefreshTokenRoute } from './route'
+import { BaseAuthUtil } from '@novice1/api-doc-generator/lib/utils/auth/baseAuthUtils'
+import { OAuth2Builder } from '../builder'
 
 export interface OAuth2ACAuthorizationParams {
     clientId: string
@@ -159,13 +161,10 @@ export class OAuth2ACTokenRoute<
     }
 }
 
-export class OAuth2ACRouterBuilder {
-    protected securitySchemeName: string
+export class OAuth2ACRouterBuilder extends OAuth2Builder {
     protected authorizationRoute: OAuth2ACAuthorizationRoute
     protected tokenRoute: IOAuth2Route
     protected refreshTokenRoute?: IOAuth2Route
-    protected description?: string
-    protected scopes?: Record<string, string>
 
     constructor(
         securitySchemeName: string,
@@ -173,26 +172,10 @@ export class OAuth2ACRouterBuilder {
         tokenRoute: OAuth2ACTokenRoute,
         refreshTokenRoute?: OAuth2RefreshTokenRoute
     ) {
-        this.securitySchemeName = securitySchemeName
+        super(securitySchemeName)
         this.authorizationRoute = authorizationRoute
         this.tokenRoute = tokenRoute
         this.refreshTokenRoute = refreshTokenRoute
-    }
-
-    setDescription(description: string): OAuth2ACRouterBuilder {
-        this.description = description;
-        return this;
-    }
-
-    /**
-     * 
-     * @param scopes The scopes of the access request.
-     * A map between the scope name and a short description for it. The map MAY be empty.
-     * @returns 
-     */
-    setScopes(scopes: Record<string, string>): OAuth2ACRouterBuilder {
-        this.scopes = scopes;
-        return this;
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -200,18 +183,6 @@ export class OAuth2ACRouterBuilder {
     (refreshTokenRoute: OAuth2RefreshTokenRoute<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>): OAuth2ACRouterBuilder {
         this.refreshTokenRoute = refreshTokenRoute;
         return this;
-    }
-
-    getScopes(): Record<string, string> | undefined {
-        return this.scopes
-    }
-
-    getSecuritySchemeName(): string {
-        return this.securitySchemeName;
-    }
-
-    getDescription(): string | undefined {
-        return this.description;
     }
 
     getAuthorizationUrl(): string {
@@ -436,7 +407,7 @@ export class OAuth2ACRouterBuilder {
         return router
     }
 
-    buildDoc() {
+    buildDoc(): BaseAuthUtil {
         const docs = new OAuth2Util(this.securitySchemeName)
             .setGrantType(GrantType.authorizationCode)
             .setAuthUrl(this.authorizationRoute.getUrl())

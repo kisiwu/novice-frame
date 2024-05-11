@@ -5,6 +5,7 @@ import { ParsedQs } from 'qs'
 import routing, {IRouter} from '@novice1/routing'
 import { IOAuth2Route, OAuth2Handler, OAuth2RefreshTokenParams, OAuth2RefreshTokenRoute } from './route'
 import { OAuth2Builder } from '../builder'
+import { BaseAuthUtil } from '@novice1/api-doc-generator/lib/utils/auth/baseAuthUtils'
 
 export interface OAuth2PasswordTokenParams {
     grantType: string
@@ -102,8 +103,6 @@ export class OAuth2PasswordBuilder extends OAuth2Builder {
     isClientAuthenticationToHeader(): boolean {
         return this.clientAuthentication == ClientAuthentication.header
     }
-
-    
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setRefreshTokenRoute<P = core.ParamsDictionary, ResBody = any, ReqBody = any, ReqQuery = ParsedQs, Locals extends Record<string, any> = Record<string, any>, MetaResType = any>
@@ -300,7 +299,7 @@ export class OAuth2PasswordBuilder extends OAuth2Builder {
         return router
     }
 
-    buildDoc() {
+    buildDoc(): BaseAuthUtil {
         const docs = new OAuth2Util(this.securitySchemeName)
             .setGrantType(GrantType.passwordCredentials)
             .setScopes(this.getScopes() || {})

@@ -11,6 +11,7 @@ import validatorJoi from '@novice1/validator-joi';
 
 import { DocsOptions, createDocsRouter } from './routers/docs';
 import routing from '@novice1/routing';
+import { ISecurityBuilder } from './security';
 
 export * from '@novice1/app'
 export * from '@novice1/api-doc-generator'
@@ -43,7 +44,8 @@ export interface FrameOptions extends Options {
         host?: ServerObject
         options?: DocsOptions
     }
-    framework?: FrameworkOptions
+    framework?: FrameworkOptions,
+    security?: ISecurityBuilder
 }
 
 export class Frame extends FrameworkApp {
@@ -69,7 +71,7 @@ export class Frame extends FrameworkApp {
         config.framework = config.framework || {}
 
         // add default middlewares
-        config.framework.middlewares =  config.framework.middlewares || []
+        config.framework.middlewares = config.framework.middlewares || []
         if (config.framework.cors) {
             config.framework.middlewares.unshift(
                 typeof config.framework.cors == 'boolean' ? cors() : cors(config.framework.cors)
@@ -80,6 +82,15 @@ export class Frame extends FrameworkApp {
             express.json(config.framework.bodyParser?.json),
             express.urlencoded(config.framework.bodyParser?.urlencoded || { extended: true }),
         )
+
+        // add default auth
+        config.framework.auth = config.framework.auth || []
+        if (config.security) {
+            const authHandlers = config.security.getAuthHandlers();
+            config.framework.auth.push(
+                ...authHandlers
+            )
+        }
 
         // add default validator if none was specified
         if (!config.framework.validators?.length) {
@@ -92,7 +103,7 @@ export class Frame extends FrameworkApp {
         }
 
         // add default routers
-        config.routers =  config.routers || []
+        config.routers = config.routers || []
         if (config.framework.cors) {
             config.routers.unshift(
                 routing().options({
@@ -101,6 +112,11 @@ export class Frame extends FrameworkApp {
                         undoc: true
                     }
                 }, typeof config.framework.cors == 'boolean' ? cors() : cors(config.framework.cors))
+            )
+        }
+        if (config.security) {
+            config.routers.push(
+                config.security.build()
             )
         }
 
@@ -135,6 +151,11 @@ export class Frame extends FrameworkApp {
             this.docs.openapi.addSecurityScheme(config?.docs?.security)
                 .setDefaultSecurity(config?.docs?.security);
             this.docs.postman.setDefaultSecurity(config?.docs?.security);
+        } else if (config.security) {
+            const securityScheme = config.security.buildDoc()
+            this.docs.openapi.addSecurityScheme(securityScheme)
+                .setDefaultSecurity(securityScheme);
+            this.docs.postman.setDefaultSecurity(securityScheme);
         }
 
         if (config?.docs?.license) {

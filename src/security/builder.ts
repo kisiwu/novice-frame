@@ -1,12 +1,16 @@
 import { BaseAuthUtil } from '@novice1/api-doc-generator/lib/utils/auth/baseAuthUtils';
-import { IRouter } from '@novice1/routing';
+import { IRouter, RequestHandler } from '@novice1/routing';
 
 export interface ISecurityBuilder {
     build(): IRouter
     buildDoc(): BaseAuthUtil
+    getAuthHandlers(): RequestHandler[]
 }
 
 export abstract class OAuth2Builder implements ISecurityBuilder {
+
+    protected authHandlers: RequestHandler[] = []
+
     protected securitySchemeName: string
     protected description?: string
     protected scopes?: Record<string, string>
@@ -33,6 +37,11 @@ export abstract class OAuth2Builder implements ISecurityBuilder {
         return this;
     }
 
+    setAuthHandlers(...handler: RequestHandler[]): this {
+        this.authHandlers = handler
+        return this;
+    }
+
     getScopes(): Record<string, string> | undefined {
         return this.scopes
     }
@@ -43,6 +52,10 @@ export abstract class OAuth2Builder implements ISecurityBuilder {
 
     getDescription(): string | undefined {
         return this.description;
+    }
+
+    getAuthHandlers(): RequestHandler[] {
+        return this.authHandlers
     }
 
     abstract build(): IRouter
