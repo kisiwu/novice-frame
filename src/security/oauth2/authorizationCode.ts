@@ -11,7 +11,7 @@ export interface OAuth2ACAuthorizationParams {
     clientId: string
     responseType: string
     redirectUri: string
-    scope: string
+    scope?: string
     state?: string
     codeChallenge?: string
 }
@@ -165,6 +165,7 @@ export class OAuth2ACRouterBuilder extends OAuth2Builder {
     protected authorizationRoute: OAuth2ACAuthorizationRoute
     protected tokenRoute: IOAuth2Route
     protected refreshTokenRoute?: IOAuth2Route
+    protected pkce: boolean = false
 
     constructor(
         securitySchemeName: string,
@@ -176,6 +177,20 @@ export class OAuth2ACRouterBuilder extends OAuth2Builder {
         this.authorizationRoute = authorizationRoute
         this.tokenRoute = tokenRoute
         this.refreshTokenRoute = refreshTokenRoute
+    }
+
+    withPkce(): this {
+        this.pkce = true
+        return this
+    }
+
+    withoutPkce(): this {
+        this.pkce = false
+        return this
+    }
+
+    isWithPkce(): boolean {
+        return this.pkce
     }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -212,14 +227,15 @@ export class OAuth2ACRouterBuilder extends OAuth2Builder {
             if (
                 req.query.client_id && typeof req.query.client_id === 'string' &&
                 req.query.response_type === 'code' &&
-                req.query.redirect_uri && typeof req.query.redirect_uri === 'string' &&
-                req.query.scope && typeof req.query.scope === 'string'
+                req.query.redirect_uri && typeof req.query.redirect_uri === 'string'
             ) {
                 const params: OAuth2ACAuthorizationParams = {
                     clientId: req.query.client_id,
                     redirectUri: req.query.response_type,
-                    responseType: req.query.redirect_uri,
-                    scope: req.query.scope
+                    responseType: req.query.redirect_uri
+                }
+                if (req.query.scope && typeof req.query.scope === 'string') {
+                    params.scope = req.query.scope
                 }
                 if (req.query.state && typeof req.query.state === 'string') {
                     params.state = req.query.state
@@ -409,7 +425,7 @@ export class OAuth2ACRouterBuilder extends OAuth2Builder {
 
     buildDoc(): BaseAuthUtil {
         const docs = new OAuth2Util(this.securitySchemeName)
-            .setGrantType(GrantType.authorizationCode)
+            .setGrantType(this.isWithPkce() ? GrantType.authorizationCodeWithPkce : GrantType.authorizationCode)
             .setAuthUrl(this.authorizationRoute.getUrl())
             .setScopes(this.getScopes() || {})
             .setAccessTokenUrl(this.tokenRoute.getUrl());
