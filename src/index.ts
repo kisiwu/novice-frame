@@ -11,7 +11,7 @@ import validatorJoi from '@novice1/validator-joi';
 
 import { DocsOptions, createDocsRouter } from './routers/docs';
 import routing from '@novice1/routing';
-import { ISecurityBuilder } from './security';
+import { ISecurityPad } from './security';
 
 export * from '@novice1/app'
 export * from '@novice1/api-doc-generator'
@@ -45,7 +45,7 @@ export interface FrameOptions extends Options {
         options?: DocsOptions
     }
     framework?: FrameworkOptions,
-    security?: ISecurityBuilder
+    security?: ISecurityPad
 }
 
 export class Frame extends FrameworkApp {
@@ -114,9 +114,9 @@ export class Frame extends FrameworkApp {
                 }, typeof config.framework.cors == 'boolean' ? cors() : cors(config.framework.cors))
             )
         }
-        if (config.security) {
+        if (config.security?.getRouter) {
             config.routers.push(
-                config.security.build()
+                config.security.getRouter()
             )
         }
 
@@ -152,7 +152,7 @@ export class Frame extends FrameworkApp {
                 .setDefaultSecurity(config?.docs?.security);
             this.docs.postman.setDefaultSecurity(config?.docs?.security);
         } else if (config.security) {
-            const securityScheme = config.security.buildDoc()
+            const securityScheme = config.security.getScheme()
             this.docs.openapi.addSecurityScheme(securityScheme)
                 .setDefaultSecurity(securityScheme);
             this.docs.postman.setDefaultSecurity(securityScheme);

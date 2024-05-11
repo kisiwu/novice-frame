@@ -4,7 +4,7 @@ import * as core from 'express-serve-static-core'
 import { ParsedQs } from 'qs'
 import routing, {IRouter} from '@novice1/routing'
 import { IOAuth2Route, OAuth2Handler, OAuth2RefreshTokenParams, OAuth2RefreshTokenRoute } from './route'
-import { OAuth2Builder } from '../builder'
+import { OAuth2Pad } from '../pads'
 import { BaseAuthUtil } from '@novice1/api-doc-generator/lib/utils/auth/baseAuthUtils'
 
 export interface OAuth2PasswordTokenParams {
@@ -62,7 +62,7 @@ export class OAuth2PasswordTokenRoute<
         return this.url
     }
 
-    setHandler(handler?: OAuth2PasswordTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>): OAuth2PasswordTokenRoute<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType> {
+    setHandler(handler?: OAuth2PasswordTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>): this {
         this.handler = handler
         return this
     }
@@ -72,7 +72,7 @@ export class OAuth2PasswordTokenRoute<
     }
 }
 
-export class OAuth2PasswordBuilder extends OAuth2Builder {
+export class OAuth2PasswordPad extends OAuth2Pad {
     protected tokenRoute: IOAuth2Route
     protected refreshTokenRoute?: IOAuth2Route
 
@@ -119,7 +119,7 @@ export class OAuth2PasswordBuilder extends OAuth2Builder {
         return this.tokenRoute.getUrl()
     }
 
-    build(): IRouter {
+    getRouter(): IRouter {
         
         const tokenUrl = this.getTokenUrl();
         const refreshTokenUrl = this.getRefreshTokenUrl();
@@ -297,7 +297,7 @@ export class OAuth2PasswordBuilder extends OAuth2Builder {
         return router
     }
 
-    buildDoc(): BaseAuthUtil {
+    getScheme(): BaseAuthUtil {
         const docs = new OAuth2Util(this.securitySchemeName)
             .setGrantType(GrantType.passwordCredentials)
             .setScopes(this.getScopes() || {})

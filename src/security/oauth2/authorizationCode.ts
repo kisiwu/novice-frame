@@ -5,7 +5,7 @@ import { OAuth2Error, OAuth2ErrorResponse, OAuth2UnauthorizedClientResponse } fr
 import { GrantType, OAuth2Util } from '@novice1/api-doc-generator'
 import { IOAuth2Route, OAuth2Handler, OAuth2RefreshTokenParams, OAuth2RefreshTokenRoute } from './route'
 import { BaseAuthUtil } from '@novice1/api-doc-generator/lib/utils/auth/baseAuthUtils'
-import { OAuth2Builder } from '../builder'
+import { OAuth2Pad } from '../pads'
 
 export interface OAuth2ACAuthorizationParams {
     clientId: string
@@ -161,7 +161,7 @@ export class OAuth2ACTokenRoute<
     }
 }
 
-export class OAuth2ACRouterBuilder extends OAuth2Builder {
+export class OAuth2ACRouterPad extends OAuth2Pad {
     protected authorizationRoute: OAuth2ACAuthorizationRoute
     protected tokenRoute: IOAuth2Route
     protected refreshTokenRoute?: IOAuth2Route
@@ -195,7 +195,7 @@ export class OAuth2ACRouterBuilder extends OAuth2Builder {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     setRefreshTokenRoute<P = core.ParamsDictionary, ResBody = any, ReqBody = any, ReqQuery = ParsedQs, Locals extends Record<string, any> = Record<string, any>, MetaResType = any>
-    (refreshTokenRoute: OAuth2RefreshTokenRoute<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>): OAuth2ACRouterBuilder {
+    (refreshTokenRoute: OAuth2RefreshTokenRoute<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>): this {
         this.refreshTokenRoute = refreshTokenRoute;
         return this;
     }
@@ -212,7 +212,7 @@ export class OAuth2ACRouterBuilder extends OAuth2Builder {
         return this.tokenRoute.getUrl()
     }
 
-    build(): routing.IRouter {
+    getRouter(): routing.IRouter {
 
         const authorizationUrl = this.getAuthorizationUrl();
         const tokenUrl = this.getTokenUrl();
@@ -423,7 +423,7 @@ export class OAuth2ACRouterBuilder extends OAuth2Builder {
         return router
     }
 
-    buildDoc(): BaseAuthUtil {
+    getScheme(): BaseAuthUtil {
         const docs = new OAuth2Util(this.securitySchemeName)
             .setGrantType(this.isWithPkce() ? GrantType.authorizationCodeWithPkce : GrantType.authorizationCode)
             .setAuthUrl(this.authorizationRoute.getUrl())

@@ -1,13 +1,17 @@
+/**
+ * security/pads
+ */
+
 import { BaseAuthUtil } from '@novice1/api-doc-generator/lib/utils/auth/baseAuthUtils';
 import { IRouter, RequestHandler } from '@novice1/routing';
 
-export interface ISecurityBuilder {
-    build(): IRouter
-    buildDoc(): BaseAuthUtil
+export interface ISecurityPad {
+    getRouter?(): IRouter
+    getScheme(): BaseAuthUtil
     getAuthHandlers(): RequestHandler[]
 }
 
-export abstract class OAuth2Builder implements ISecurityBuilder {
+export abstract class OAuth2Pad implements ISecurityPad {
 
     protected authHandlers: RequestHandler[] = []
 
@@ -58,8 +62,8 @@ export abstract class OAuth2Builder implements ISecurityBuilder {
         return this.authHandlers
     }
 
-    abstract build(): IRouter
+    abstract getRouter(): IRouter
 
-    abstract buildDoc(): BaseAuthUtil
+    abstract getScheme(): BaseAuthUtil
 
 }

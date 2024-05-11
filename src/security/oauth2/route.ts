@@ -63,7 +63,7 @@ export class OAuth2RefreshTokenRoute<
         return this.url
     }
 
-    setHandler(handler?: OAuth2RefreshTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>): OAuth2RefreshTokenRoute<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType> {
+    setHandler(handler?: OAuth2RefreshTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>): this {
         this.handler = handler
         return this
     }
