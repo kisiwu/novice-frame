@@ -99,7 +99,7 @@ export class OAuth2ClientCredsPad extends OAuth2Pad {
         return this.tokenRoute.getUrl()
     }
 
-    getRouter(): IRouter {
+    router(): IRouter {
         
         const tokenUrl = this.getTokenUrl();
         const refreshTokenUrl = this.getRefreshTokenUrl();
@@ -258,7 +258,7 @@ export class OAuth2ClientCredsPad extends OAuth2Pad {
         return router
     }
 
-    getScheme(): BaseAuthUtil {
+    scheme(): BaseAuthUtil {
         const docs = new OAuth2Util(this.securitySchemeName)
             .setGrantType(GrantType.clientCredentials)
             .setScopes(this.getScopes() || {})

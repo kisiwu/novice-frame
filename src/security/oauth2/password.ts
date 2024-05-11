@@ -119,7 +119,7 @@ export class OAuth2PasswordPad extends OAuth2Pad {
         return this.tokenRoute.getUrl()
     }
 
-    getRouter(): IRouter {
+    router(): IRouter {
         
         const tokenUrl = this.getTokenUrl();
         const refreshTokenUrl = this.getRefreshTokenUrl();
@@ -297,7 +297,7 @@ export class OAuth2PasswordPad extends OAuth2Pad {
         return router
     }
 
-    getScheme(): BaseAuthUtil {
+    scheme(): BaseAuthUtil {
         const docs = new OAuth2Util(this.securitySchemeName)
             .setGrantType(GrantType.passwordCredentials)
             .setScopes(this.getScopes() || {})

@@ -161,7 +161,7 @@ export class OAuth2ACTokenRoute<
     }
 }
 
-export class OAuth2ACRouterPad extends OAuth2Pad {
+export class OAuth2ACPad extends OAuth2Pad {
     protected authorizationRoute: OAuth2ACAuthorizationRoute
     protected tokenRoute: IOAuth2Route
     protected refreshTokenRoute?: IOAuth2Route
@@ -212,7 +212,7 @@ export class OAuth2ACRouterPad extends OAuth2Pad {
         return this.tokenRoute.getUrl()
     }
 
-    getRouter(): routing.IRouter {
+    router(): routing.IRouter {
 
         const authorizationUrl = this.getAuthorizationUrl();
         const tokenUrl = this.getTokenUrl();
@@ -423,7 +423,7 @@ export class OAuth2ACRouterPad extends OAuth2Pad {
         return router
     }
 
-    getScheme(): BaseAuthUtil {
+    scheme(): BaseAuthUtil {
         const docs = new OAuth2Util(this.securitySchemeName)
             .setGrantType(this.isWithPkce() ? GrantType.authorizationCodeWithPkce : GrantType.authorizationCode)
             .setAuthUrl(this.authorizationRoute.getUrl())

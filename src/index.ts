@@ -86,7 +86,7 @@ export class Frame extends FrameworkApp {
         // add default auth
         config.framework.auth = config.framework.auth || []
         if (config.security) {
-            const authHandlers = config.security.getAuthHandlers();
+            const authHandlers = config.security.authHandlers();
             config.framework.auth.push(
                 ...authHandlers
             )
@@ -114,9 +114,9 @@ export class Frame extends FrameworkApp {
                 }, typeof config.framework.cors == 'boolean' ? cors() : cors(config.framework.cors))
             )
         }
-        if (config.security?.getRouter) {
+        if (config.security?.router) {
             config.routers.push(
-                config.security.getRouter()
+                config.security.router()
             )
         }
 
@@ -152,7 +152,7 @@ export class Frame extends FrameworkApp {
                 .setDefaultSecurity(config?.docs?.security);
             this.docs.postman.setDefaultSecurity(config?.docs?.security);
         } else if (config.security) {
-            const securityScheme = config.security.getScheme()
+            const securityScheme = config.security.scheme()
             this.docs.openapi.addSecurityScheme(securityScheme)
                 .setDefaultSecurity(securityScheme);
             this.docs.postman.setDefaultSecurity(securityScheme);

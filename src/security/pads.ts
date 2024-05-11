@@ -6,14 +6,14 @@ import { BaseAuthUtil } from '@novice1/api-doc-generator/lib/utils/auth/baseAuth
 import { IRouter, RequestHandler } from '@novice1/routing';
 
 export interface ISecurityPad {
-    getRouter?(): IRouter
-    getScheme(): BaseAuthUtil
-    getAuthHandlers(): RequestHandler[]
+    router?(): IRouter
+    scheme(): BaseAuthUtil
+    authHandlers(): RequestHandler[]
 }
 
 export abstract class OAuth2Pad implements ISecurityPad {
 
-    protected authHandlers: RequestHandler[] = []
+    protected _authHandlers: RequestHandler[] = []
 
     protected securitySchemeName: string
     protected description?: string
@@ -42,7 +42,7 @@ export abstract class OAuth2Pad implements ISecurityPad {
     }
 
     setAuthHandlers(...handler: RequestHandler[]): this {
-        this.authHandlers = handler
+        this._authHandlers = handler
         return this;
     }
 
@@ -58,12 +58,12 @@ export abstract class OAuth2Pad implements ISecurityPad {
         return this.description;
     }
 
-    getAuthHandlers(): RequestHandler[] {
-        return this.authHandlers
+    authHandlers(): RequestHandler[] {
+        return this._authHandlers
     }
 
-    abstract getRouter(): IRouter
+    abstract router(): IRouter
 
-    abstract getScheme(): BaseAuthUtil
+    abstract scheme(): BaseAuthUtil
 
 }
