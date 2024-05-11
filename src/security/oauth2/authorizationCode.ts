@@ -122,8 +122,8 @@ export class OAuth2ACAuthorizationRoute<
         return this.handler
     }
 
-    getPostHandler(): OAuth2ACAuthorizationHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType> | undefined {
-        return this.handler
+    getPostHandler(): OAuth2ACAuthorizationHandler<P, PostResBody, PostReqBody, PostReqQuery, PostLocals, PostMetaResType> | undefined {
+        return this.postHandler
     }
 }
 
@@ -231,8 +231,8 @@ export class OAuth2ACPad extends OAuth2Pad {
             ) {
                 const params: OAuth2ACAuthorizationParams = {
                     clientId: req.query.client_id,
-                    redirectUri: req.query.response_type,
-                    responseType: req.query.redirect_uri
+                    redirectUri: req.query.redirect_uri,
+                    responseType: req.query.response_type
                 }
                 if (req.query.scope && typeof req.query.scope === 'string') {
                     params.scope = req.query.scope
