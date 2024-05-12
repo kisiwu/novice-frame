@@ -7,10 +7,11 @@
     [x] routers
         [] cors
     [x] images (x-logo) and x-tagGroups in route /docs/schema for openapi schema
-    [ ] security builders
+    [ ] security shapes
         [x] Frame options should have a 'security' property that takes a ISecurityShape
         [x] ISecurityShape should have have an optional auth middleware (getAuthHandlers(): xx | undefined)
-        [ ] oauth2 shapes (authorization_code, password, client_credentials)
+        [x] oauth2 shapes (authorization_code, password, client_credentials)
+    [ ] Docs shape
     [ ] multer and files validation functions
 
 [ ] to fix:

@@ -2,16 +2,7 @@ import routing, { RequestHandler } from '@novice1/routing';
 import YAML from 'yamljs';
 import swaggerUi from 'swagger-ui-express';
 import { OpenAPI, Postman } from '@novice1/api-doc-generator';
-
-export interface DocsLogo {
-    url: string
-    alt?: string
-}
-
-export interface DocsOptions {
-    logo?: DocsLogo,
-    tagGroups?: Record<string, string[]>
-}
+import { DocsOptions } from '../docs';
 
 export function createDocsRouter(path: string, { openapi, postman }: { openapi: OpenAPI, postman: Postman }, options?: DocsOptions) {
     const swaggerUIController: RequestHandler = (req, res, next) => {

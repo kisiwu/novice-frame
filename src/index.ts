@@ -5,13 +5,12 @@ import * as bodyParser from 'body-parser';
 import cors from 'cors';
 import { FrameworkApp, FrameworkOptions as BaseFrameworkOptions, Options } from '@novice1/app';
 import { OpenAPI, Postman } from '@novice1/api-doc-generator';
-import { BaseAuthUtil } from '@novice1/api-doc-generator/lib/utils/auth/all';
-import { LicenseObject, ServerObject } from '@novice1/api-doc-generator/lib/generators/openapi/definitions';
 import validatorJoi from '@novice1/validator-joi';
 
-import { DocsOptions, createDocsRouter } from './routers/docs';
 import routing from '@novice1/routing';
+import { createDocsRouter } from './routers/docs';
 import { ISecurityShape } from './security';
+import { DocsConfig, DocsOptions } from './docs';
 
 export * from '@novice1/app'
 export * from '@novice1/api-doc-generator'
@@ -31,22 +30,9 @@ export interface FrameworkOptions extends BaseFrameworkOptions {
     cors?: cors.CorsOptions | cors.CorsOptionsDelegate<cors.CorsRequest> | boolean
 }
 
-export interface DocsLogo {
-    url: string
-    alt?: string
-}
-
 export interface FrameOptions extends Options {
-    docs?: {
-        path?: string
-        title?: string
-        consumes?: string[]
-        security?: BaseAuthUtil
-        license?: LicenseObject | string
-        host?: ServerObject
-        options?: DocsOptions
-    }
-    framework?: FrameworkOptions,
+    docs?: DocsConfig //| IDocsShape
+    framework?: FrameworkOptions
     security?: ISecurityShape
 }
 
@@ -67,9 +53,10 @@ export class Frame extends FrameworkApp {
     }
 
     constructor(config?: FrameOptions) {
+        // make sure there is a config
+        config = { ...config }
 
         // make sure there is a framework config
-        config = { ...config }
         config.framework = config.framework || {}
 
         // add default middlewares
@@ -129,30 +116,35 @@ export class Frame extends FrameworkApp {
             postman: new Postman()
         }
 
-        if (config?.docs?.path) {
-            this.#docsPath = config.docs.path
+        let docsConfig: DocsConfig | undefined
+        if (config?.docs) {
+            docsConfig = config?.docs
+        }  
+
+        if (docsConfig?.path) {
+            this.#docsPath = docsConfig.path
         }
 
-        if (config?.docs?.title) {
-            this.docs.openapi.setTitle(config?.docs?.title);
-            this.docs.postman.setName(config?.docs?.title);
+        if (docsConfig?.title) {
+            this.docs.openapi.setTitle(docsConfig?.title);
+            this.docs.postman.setName(docsConfig?.title);
         } else {
             this.docs.openapi.setTitle('API documentation');
             this.docs.postman.setName('API documentation');
         }
 
-        if (config?.docs?.consumes) {
-            this.docs.openapi.setConsumes(config?.docs?.consumes);
-            this.docs.postman.setConsumes(config?.docs?.consumes);
+        if (docsConfig?.consumes) {
+            this.docs.openapi.setConsumes(docsConfig?.consumes);
+            this.docs.postman.setConsumes(docsConfig?.consumes);
         } else {
             this.docs.openapi.setConsumes(['application/json']);
             this.docs.postman.setConsumes(['application/json']);
         }
 
-        if (config?.docs?.security) {
-            this.docs.openapi.addSecurityScheme(config?.docs?.security)
-                .setDefaultSecurity(config?.docs?.security);
-            this.docs.postman.setDefaultSecurity(config?.docs?.security);
+        if (docsConfig?.security) {
+            this.docs.openapi.addSecurityScheme(docsConfig?.security)
+                .setDefaultSecurity(docsConfig?.security);
+            this.docs.postman.setDefaultSecurity(docsConfig?.security);
         } else if (config.security) {
             const securityScheme = config.security.scheme()
             this.docs.openapi.addSecurityScheme(securityScheme)
@@ -160,19 +152,19 @@ export class Frame extends FrameworkApp {
             this.docs.postman.setDefaultSecurity(securityScheme);
         }
 
-        if (config?.docs?.license) {
-            if (typeof config?.docs?.license === 'string')
-                this.docs.openapi.setLicense(config?.docs?.license);
+        if (docsConfig?.license) {
+            if (typeof docsConfig?.license === 'string')
+                this.docs.openapi.setLicense(docsConfig?.license);
             else
-                this.docs.openapi.setLicense(config?.docs?.license);
+                this.docs.openapi.setLicense(docsConfig?.license);
         }
 
-        if (config?.docs?.host?.url) {
-            const hostUrl = config.docs.host.url;
+        if (docsConfig?.host?.url) {
+            const hostUrl = docsConfig.host.url;
             const regex = /(?<=(?<!\{)\{)[^{}]*(?=\}(?!\}))/g;
-            const variables = config.docs.host.variables;
+            const variables = docsConfig.host.variables;
 
-            this.docs.openapi.setServers(config.docs.host);
+            this.docs.openapi.setServers(docsConfig.host);
 
             this.docs.postman.setHost(hostUrl.replace(regex, match => {
                 return `{${match}}`
@@ -192,8 +184,8 @@ export class Frame extends FrameworkApp {
             }
         }
 
-        if(config.docs?.options) {
-            this.#docsOptions = config.docs.options
+        if(docsConfig?.options) {
+            this.#docsOptions = docsConfig.options
         }
 
         this._addDocsRoute();
