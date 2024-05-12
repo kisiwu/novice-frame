@@ -8,9 +8,9 @@
         [] cors
     [x] images (x-logo) and x-tagGroups in route /docs/schema for openapi schema
     [ ] security builders
-        [x] Frame options should have a 'security' property that takes a ISecurityPad
-        [x] ISecurityPad should have have an optional auth middleware (getAuthHandlers(): xx | undefined)
-        [ ] oauth2 pads (authorization_code, password, client_credentials)
+        [x] Frame options should have a 'security' property that takes a ISecurityShape
+        [x] ISecurityShape should have have an optional auth middleware (getAuthHandlers(): xx | undefined)
+        [ ] oauth2 shapes (authorization_code, password, client_credentials)
     [ ] multer and files validation functions
 
 [ ] to fix:

@@ -4,7 +4,7 @@ import * as core from 'express-serve-static-core'
 import { ParsedQs } from 'qs'
 import routing, {IRouter} from '@novice1/routing'
 import { IOAuth2Route, OAuth2Handler, OAuth2RefreshTokenParams, OAuth2RefreshTokenRoute } from './route'
-import { OAuth2Pad } from '../pads'
+import { OAuth2Shape } from '../shapes'
 import { BaseAuthUtil } from '@novice1/api-doc-generator/lib/utils/auth/baseAuthUtils'
 
 export interface OAuth2ClientCredsTokenParams {
@@ -60,7 +60,7 @@ export class OAuth2ClientCredsTokenRoute<
         return this.url
     }
 
-    setHandler(handler?: OAuth2ClientCredsTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>): OAuth2ClientCredsTokenRoute<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType> {
+    setHandler(handler?: OAuth2ClientCredsTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>): this {
         this.handler = handler
         return this
     }
@@ -70,7 +70,7 @@ export class OAuth2ClientCredsTokenRoute<
     }
 }
 
-export class OAuth2ClientCredsPad extends OAuth2Pad {
+export class OAuth2ClientCredsShape extends OAuth2Shape {
     protected tokenRoute: IOAuth2Route
     protected refreshTokenRoute?: IOAuth2Route
 

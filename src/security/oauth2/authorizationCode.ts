@@ -5,7 +5,7 @@ import { OAuth2Error, OAuth2ErrorResponse, OAuth2UnauthorizedClientResponse } fr
 import { GrantType, OAuth2Util } from '@novice1/api-doc-generator'
 import { IOAuth2Route, OAuth2Handler, OAuth2RefreshTokenParams, OAuth2RefreshTokenRoute } from './route'
 import { BaseAuthUtil } from '@novice1/api-doc-generator/lib/utils/auth/baseAuthUtils'
-import { OAuth2Pad } from '../pads'
+import { OAuth2Shape } from '../shapes'
 
 export interface OAuth2ACAuthorizationParams {
     clientId: string
@@ -106,14 +106,12 @@ export class OAuth2ACAuthorizationRoute<
         return this.url
     }
 
-    setHandler(handler?: OAuth2ACAuthorizationHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>):
-        OAuth2ACAuthorizationRoute<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType, PostResBody, PostReqBody, PostReqQuery, PostLocals, PostMetaResType> {
+    setHandler(handler?: OAuth2ACAuthorizationHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>): this {
         this.handler = handler
         return this
     }
 
-    setPostHandler(postHandler?: OAuth2ACAuthorizationHandler<P, PostResBody, PostReqBody, PostReqQuery, PostLocals, PostMetaResType>):
-        OAuth2ACAuthorizationRoute<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType, PostResBody, PostReqBody, PostReqQuery, PostLocals, PostMetaResType> {
+    setPostHandler(postHandler?: OAuth2ACAuthorizationHandler<P, PostResBody, PostReqBody, PostReqQuery, PostLocals, PostMetaResType>): this {
         this.postHandler = postHandler
         return this
     }
@@ -151,7 +149,7 @@ export class OAuth2ACTokenRoute<
         return this.url
     }
 
-    setHandler(handler?: OAuth2ACTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>): OAuth2ACTokenRoute<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType> {
+    setHandler(handler?: OAuth2ACTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>): this {
         this.handler = handler
         return this
     }
@@ -161,7 +159,7 @@ export class OAuth2ACTokenRoute<
     }
 }
 
-export class OAuth2ACPad extends OAuth2Pad {
+export class OAuth2ACShape extends OAuth2Shape {
     protected authorizationRoute: OAuth2ACAuthorizationRoute
     protected tokenRoute: IOAuth2Route
     protected refreshTokenRoute?: IOAuth2Route

@@ -26,7 +26,7 @@ export abstract class BaseOAuth2ErrorResponse {
         return this.errorUri;
     }
 
-    toObject(): {error: string, error_description?: string, error_uri?: string} {
+    toObject(): { error: string, error_description?: string, error_uri?: string } {
         return {
             error: this.error,
             error_description: this.errorDescription,
@@ -34,7 +34,7 @@ export abstract class BaseOAuth2ErrorResponse {
         }
     }
 
-    toJSON(): {error: string, error_description?: string, error_uri?: string} {
+    toJSON(): { error: string, error_description?: string, error_uri?: string } {
         return this.toObject()
     }
 }
@@ -153,7 +153,7 @@ export class OAuth2TokenResponse {
         return this.scope;
     }
 
-    toObject(): {access_token: string, token_type: string, expires_in?: number, refresh_token?: string, scope?: string} {
+    toObject(): { access_token: string, token_type: string, expires_in?: number, refresh_token?: string, scope?: string } {
         return {
             access_token: this.accessToken,
             token_type: this.tokenType,
@@ -163,7 +163,7 @@ export class OAuth2TokenResponse {
         }
     }
 
-    toJSON(): {access_token: string, token_type: string, expires_in?: number, refresh_token?: string, scope?: string} {
+    toJSON(): { access_token: string, token_type: string, expires_in?: number, refresh_token?: string, scope?: string } {
         return this.toObject()
     }
 }

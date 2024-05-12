@@ -11,11 +11,13 @@ import validatorJoi from '@novice1/validator-joi';
 
 import { DocsOptions, createDocsRouter } from './routers/docs';
 import routing from '@novice1/routing';
-import { ISecurityPad } from './security';
+import { ISecurityShape } from './security';
 
 export * from '@novice1/app'
 export * from '@novice1/api-doc-generator'
 export * from './security'
+export * from './services/responseService'
+export * from './services/securityService'
 
 export interface FrameworkOptions extends BaseFrameworkOptions {
     bodyParser?: {
@@ -45,7 +47,7 @@ export interface FrameOptions extends Options {
         options?: DocsOptions
     }
     framework?: FrameworkOptions,
-    security?: ISecurityPad
+    security?: ISecurityShape
 }
 
 export class Frame extends FrameworkApp {

@@ -4,7 +4,7 @@ import * as core from 'express-serve-static-core'
 import { ParsedQs } from 'qs'
 import routing, {IRouter} from '@novice1/routing'
 import { IOAuth2Route, OAuth2Handler, OAuth2RefreshTokenParams, OAuth2RefreshTokenRoute } from './route'
-import { OAuth2Pad } from '../pads'
+import { OAuth2Shape } from '../shapes'
 import { BaseAuthUtil } from '@novice1/api-doc-generator/lib/utils/auth/baseAuthUtils'
 
 export interface OAuth2PasswordTokenParams {
@@ -72,7 +72,7 @@ export class OAuth2PasswordTokenRoute<
     }
 }
 
-export class OAuth2PasswordPad extends OAuth2Pad {
+export class OAuth2PasswordShape extends OAuth2Shape {
     protected tokenRoute: IOAuth2Route
     protected refreshTokenRoute?: IOAuth2Route
 

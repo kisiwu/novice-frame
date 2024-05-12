@@ -1,17 +1,17 @@
 /**
- * security/pads
+ * security/shapes
  */
 
 import { BaseAuthUtil } from '@novice1/api-doc-generator/lib/utils/auth/baseAuthUtils';
 import { IRouter, RequestHandler } from '@novice1/routing';
 
-export interface ISecurityPad {
+export interface ISecurityShape {
     router?(): IRouter
     scheme(): BaseAuthUtil
     authHandlers(): RequestHandler[]
 }
 
-export abstract class OAuth2Pad implements ISecurityPad {
+export abstract class OAuth2Shape implements ISecurityShape {
 
     protected _authHandlers: RequestHandler[] = []
 
