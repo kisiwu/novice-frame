@@ -1,6 +1,9 @@
 import { LicenseObject, ServerObject, ServerVariableObject } from '@novice1/api-doc-generator/lib/generators/openapi/definitions'
 import { BaseAuthUtil } from '@novice1/api-doc-generator/lib/utils/auth/baseAuthUtils'
 
+export * from './classes/ExampleShape'
+export * from './classes/MediaTypeShape'
+
 export interface DocsLogo {
     url: string
     alt?: string

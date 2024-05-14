@@ -14,6 +14,7 @@ import { DocsConfig, DocsOptions, IDocsShape } from './docs';
 
 export * from '@novice1/app'
 export * from '@novice1/api-doc-generator'
+export * from './docs';
 export * from './security'
 export * from './services/responseService'
 export * from './services/securityService'
