@@ -10,7 +10,7 @@ import validatorJoi from '@novice1/validator-joi';
 import routing from '@novice1/routing';
 import { createDocsRouter } from './routers/docs';
 import { ISecurityShape } from './security';
-import { DocsConfig, DocsOptions } from './docs';
+import { DocsConfig, DocsOptions, IDocsShape } from './docs';
 
 export * from '@novice1/app'
 export * from '@novice1/api-doc-generator'
@@ -31,7 +31,7 @@ export interface FrameworkOptions extends BaseFrameworkOptions {
 }
 
 export interface FrameOptions extends Options {
-    docs?: DocsConfig //| IDocsShape
+    docs?: DocsConfig | IDocsShape
     framework?: FrameworkOptions
     security?: ISecurityShape
 }
@@ -118,7 +118,11 @@ export class Frame extends FrameworkApp {
 
         let docsConfig: DocsConfig | undefined
         if (config?.docs) {
-            docsConfig = config?.docs
+            if ('docs' in config.docs) {
+                docsConfig = config.docs.docs()
+            } else {
+                docsConfig = config?.docs
+            }
         }  
 
         if (docsConfig?.path) {
