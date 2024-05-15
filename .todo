@@ -13,8 +13,10 @@
         [x] oauth2 shapes (authorization_code, password, client_credentials)
     [x] Docs shape
     [x] ExampleShape
-    [ ] MediaTypeShape
-    [ ] SchemaShape
+    [x] MediaTypeShape
+    [x] SchemaShape
+    [ ] ResponseShape (extends ResponseUtil)
+    [ ] implement ExampleShape, ResponseShape and SchemaShape in DocsShape (for openapi components)
     [ ] multer and files validation functions
 
 [ ] to fix:

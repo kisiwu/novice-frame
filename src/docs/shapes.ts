@@ -3,6 +3,7 @@ import { BaseAuthUtil } from '@novice1/api-doc-generator/lib/utils/auth/baseAuth
 
 export * from './classes/ExampleShape'
 export * from './classes/MediaTypeShape'
+export * from './classes/SchemaShape'
 
 export interface DocsLogo {
     url: string
@@ -47,13 +48,13 @@ export class DocsShape implements IDocsShape {
         return this
     }
 
-    setConsumes(mimeTypes: string[]): this
-    setConsumes(...mimeTypes: string[]): this
-    setConsumes(mimeTypes: string[] | string, ...moreMimeTypes: string[]): this {
-        if (Array.isArray(mimeTypes)) {
-            this.#consumes = mimeTypes
-        } else if (typeof mimeTypes === 'string') {
-            this.#consumes = [mimeTypes].concat(moreMimeTypes)
+    setConsumes(mediaTypes: string[]): this
+    setConsumes(...mediaTypes: string[]): this
+    setConsumes(mediaTypes: string[] | string, ...moreMediaTypes: string[]): this {
+        if (Array.isArray(mediaTypes)) {
+            this.#consumes = mediaTypes
+        } else if (typeof mediaTypes === 'string') {
+            this.#consumes = [mediaTypes].concat(moreMediaTypes)
         }
         return this
     }
@@ -62,7 +63,7 @@ export class DocsShape implements IDocsShape {
     setLicense(license: LicenseObject): this
     setLicense(value: LicenseObject | string, url?: string): this {
         if (typeof value === 'string') {
-            this.#license = { 
+            this.#license = {
                 name: value,
                 url
             }
@@ -76,7 +77,7 @@ export class DocsShape implements IDocsShape {
     setLogo(logo: DocsLogo): this
     setLogo(value: DocsLogo | string, alt?: string): this {
         if (typeof value === 'string') {
-            this.#logo = { 
+            this.#logo = {
                 url: value,
                 alt
             }
@@ -95,7 +96,7 @@ export class DocsShape implements IDocsShape {
     setHost(server: ServerObject): this
     setHost(value: ServerObject | string, description?: string, variables?: Record<string, ServerVariableObject>): this {
         if (typeof value === 'string') {
-            this.#host = { 
+            this.#host = {
                 url: value,
                 description,
                 variables
@@ -121,7 +122,3 @@ export class DocsShape implements IDocsShape {
         }
     }
 }
-
-new DocsShape().setConsumes('jsnkf', 'ojsposd')
-    .setLicense('kjjkf', 'ioqehjfoikjkepokzjopkepfokpêkfprevpk')
-    .setLogo('oiqdoq', 'logo')
