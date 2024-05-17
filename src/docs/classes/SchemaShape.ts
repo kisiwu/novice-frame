@@ -78,6 +78,10 @@ export class SchemaShape implements ISchemaShape {
         return r
     }
 
+    getName(): string {
+        return this.name
+    }
+
     setSchema(schema: SchemaShapeObject): this {
         const { allOf, anyOf, oneOf, not, items, properties, ...value } = schema
         const valueToKeep: SchemaObject = value

@@ -197,6 +197,18 @@ export class Frame extends FrameworkApp {
             }
         }
 
+        if(docsConfig?.examples) {
+            this.docs.openapi.setExamples(docsConfig.examples);
+        }
+
+        if(docsConfig?.schemas) {
+            this.docs.openapi.setSchemas(docsConfig.schemas);
+        }
+
+        if(docsConfig?.responses) {
+            this.docs.openapi.setResponses(docsConfig?.responses);
+        }
+
         if(docsConfig?.options) {
             this.#docsOptions = docsConfig.options
         }

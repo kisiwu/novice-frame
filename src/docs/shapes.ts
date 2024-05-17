@@ -1,5 +1,15 @@
-import { LicenseObject, ServerObject, ServerVariableObject } from '@novice1/api-doc-generator/lib/generators/openapi/definitions'
+import { 
+    ExampleObject, 
+    LicenseObject, 
+    ReferenceObject, 
+    SchemaObject, 
+    ServerObject, 
+    ServerVariableObject 
+} from '@novice1/api-doc-generator/lib/generators/openapi/definitions'
 import { BaseAuthUtil } from '@novice1/api-doc-generator/lib/utils/auth/baseAuthUtils'
+import { BaseResponseUtil } from '@novice1/api-doc-generator/lib/utils/responses/baseResponseUtils'
+import { ExampleShape } from './classes/ExampleShape'
+import { SchemaShape } from './classes/SchemaShape'
 
 export * from './classes/ExampleShape'
 export * from './classes/MediaTypeShape'
@@ -22,6 +32,9 @@ export interface DocsConfig {
     security?: BaseAuthUtil
     license?: LicenseObject | string
     host?: ServerObject
+    examples?: Record<string, ReferenceObject | ExampleObject>
+    schemas?: Record<string, SchemaObject | ReferenceObject>
+    responses?: BaseResponseUtil
     options?: DocsOptions
 }
 
@@ -37,6 +50,27 @@ export class DocsShape implements IDocsShape {
     #host?: ServerObject
     #logo?: DocsLogo
     #tagGroups?: Record<string, string[]>
+
+    #examples?: Iterable<ExampleShape>
+    #schemas?: Iterable<SchemaShape>
+    #responses?: BaseResponseUtil
+
+    private _getExamples(): Record<string, ReferenceObject | ExampleObject> | undefined {
+        if (!this.#examples) return
+        const values: Record<string, ReferenceObject | ExampleObject> = {}
+        for(const v of this.#examples) {
+            values[v.getName()] = v.toObject()
+        }
+        return values
+    }
+    private _getSchemas(): Record<string, SchemaObject | ReferenceObject> | undefined {
+        if (!this.#schemas) return
+        const values: Record<string, SchemaObject | ReferenceObject> = {}
+        for(const v of this.#schemas) {
+            values[v.getName()] = v.toObject()
+        }
+        return values
+    }
 
     setPath(path: string): this {
         this.#path = path
@@ -107,8 +141,20 @@ export class DocsShape implements IDocsShape {
         return this
     }
 
+    setExamples(examples: Iterable<ExampleShape>): this {
+        this.#examples = examples
+        return this
+    }
+    setSchemas(schemas: Iterable<SchemaShape>): this {
+        this.#schemas = schemas
+        return this
+    }
+    setResponses(responses: BaseResponseUtil): this {
+        this.#responses = responses
+        return this
+    }
+
     docs(): DocsConfig {
-        //throw new Error('Method not implemented.')
         return {
             path: this.#path,
             title: this.#title,
@@ -118,7 +164,11 @@ export class DocsShape implements IDocsShape {
             options: {
                 logo: this.#logo,
                 tagGroups: this.#tagGroups
-            }
+            },
+
+            examples: this._getExamples(),
+            schemas: this._getSchemas(),
+            responses: this.#responses
         }
     }
 }
