@@ -28,7 +28,12 @@ export interface FrameworkOptions extends BaseFrameworkOptions {
         secret?: string | string[]
         options?: cookieParser.CookieParseOptions
     }
-    cors?: cors.CorsOptions | cors.CorsOptionsDelegate<cors.CorsRequest> | boolean
+    cors?: cors.CorsOptions | cors.CorsOptionsDelegate<cors.CorsRequest> | boolean,
+    /**
+     * Error request handler for the default validator
+     * if no validitor was set in constructor
+     */
+    validatorOnError?: routing.ErrorRequestHandler
 }
 
 export interface FrameOptions extends Options {
@@ -85,10 +90,13 @@ export class Frame extends FrameworkApp {
         // add default validator if none was specified
         if (!config.framework.validators?.length) {
             config.framework.validators = config.framework.validators || []
-            config.framework.validators.push(
-                validatorJoi({ stripUnknown: true }, (err, _req, res) => {
+            const onerror: routing.ErrorRequestHandler = typeof config.framework.validatorOnError == 'function' ? 
+                config.framework.validatorOnError : 
+                (err, _req, res) => {
                     return res.status(400).json(err);
-                })
+                };
+            config.framework.validators.push(
+                validatorJoi({ stripUnknown: true }, onerror)
             )
         }
 
