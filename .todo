@@ -15,8 +15,8 @@
     [x] ExampleShape
     [x] MediaTypeShape
     [x] SchemaShape
-    [o] ResponseShape (extends ResponseUtil)
-    [o] implement ExampleShape, ResponseShape and SchemaShape in DocsShape (for openapi components)
+    [x] ResponseShape (extends ResponseUtil)
+    [x] implement ExampleShape, ResponseShape and SchemaShape in DocsShape (for openapi components)
     [ ] docs version (for openapi)
     [ ] multer and files validation functions
 

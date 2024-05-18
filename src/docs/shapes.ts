@@ -51,22 +51,21 @@ export class DocsShape implements IDocsShape {
     #logo?: DocsLogo
     #tagGroups?: Record<string, string[]>
 
-    #examples?: Iterable<ExampleShape>
-    #schemas?: Iterable<SchemaShape>
+    #examples?: Record<string, ReferenceObject | ExampleObject>
+    #schemas?: Record<string, ReferenceObject | SchemaObject>
     #responses?: BaseResponseUtil
 
-    private _getExamples(): Record<string, ReferenceObject | ExampleObject> | undefined {
-        if (!this.#examples) return
+    private _convertExampleShapes(examples: Iterable<ExampleShape>): Record<string, ReferenceObject | ExampleObject> {
         const values: Record<string, ReferenceObject | ExampleObject> = {}
-        for(const v of this.#examples) {
+        for(const v of examples) {
             values[v.getName()] = v.toObject()
         }
         return values
     }
-    private _getSchemas(): Record<string, SchemaObject | ReferenceObject> | undefined {
-        if (!this.#schemas) return
-        const values: Record<string, SchemaObject | ReferenceObject> = {}
-        for(const v of this.#schemas) {
+
+    private _convertSchemaShapes(schemas: Iterable<SchemaShape>): Record<string, ReferenceObject | SchemaObject> {
+        const values: Record<string, ReferenceObject | SchemaObject> = {}
+        for(const v of schemas) {
             values[v.getName()] = v.toObject()
         }
         return values
@@ -141,14 +140,28 @@ export class DocsShape implements IDocsShape {
         return this
     }
 
-    setExamples(examples: Iterable<ExampleShape>): this {
-        this.#examples = examples
+    setExamples(examples: Iterable<ExampleShape>): this
+    setExamples(examples: Record<string, ReferenceObject | ExampleObject>): this
+    setExamples(examples: Iterable<ExampleShape> | Record<string, ReferenceObject | ExampleObject>): this {
+        if (Symbol.iterator in examples) {
+            this.#examples = this._convertExampleShapes(examples)
+        } else {
+            this.#examples = examples
+        }
         return this
     }
-    setSchemas(schemas: Iterable<SchemaShape>): this {
-        this.#schemas = schemas
+
+    setSchemas(schemas: Iterable<SchemaShape>): this
+    setSchemas(schemas: Record<string, ReferenceObject | SchemaObject>): this
+    setSchemas(schemas: Iterable<SchemaShape> | Record<string, ReferenceObject | SchemaObject>): this {
+        if (Symbol.iterator in schemas) {
+            this.#schemas = this._convertSchemaShapes(schemas)
+        } else {
+            this.#schemas = schemas
+        }
         return this
     }
+
     setResponses(responses: BaseResponseUtil): this {
         this.#responses = responses
         return this
@@ -166,8 +179,8 @@ export class DocsShape implements IDocsShape {
                 tagGroups: this.#tagGroups
             },
 
-            examples: this._getExamples(),
-            schemas: this._getSchemas(),
+            examples: this.#examples,
+            schemas: this.#schemas,
             responses: this.#responses
         }
     }
