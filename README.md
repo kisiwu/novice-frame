@@ -44,17 +44,17 @@ app.listen(3000)
 
 ### Framework configuration
 
-Based on [@novice1/app](https://www.npmjs.com/package/@novice1/app). The default validator is [@novice1/validator-joi](https://www.npmjs.com/package/@novice1/validator-joi) if none was specified.
+Based on [@novice1/app](https://www.npmjs.com/package/@novice1/app).
 
 You can configure:
 
-- `auth`: (See [@novice1/app](https://www.npmjs.com/package/@novice1/app))
-- `middlewares`: (See [@novice1/app](https://www.npmjs.com/package/@novice1/app))
-- `validators`: (See [@novice1/app](https://www.npmjs.com/package/@novice1/app). The default validator is [@novice1/validator-joi](https://www.npmjs.com/package/@novice1/validator-joi) if none was specified.)
-- `validatorOnError`: `ErrorRequestHandler`. Only used for the default validator.
-- `cors`: `cors.CorsOptions | cors.CorsOptionsDelegate<cors.CorsRequest> | boolean`. (See [cors](https://www.npmjs.com/package/cors))
-- `bodyParser`: `{ json?: bodyParser.OptionsJson, urlencoded?: bodyParser.OptionsUrlencoded }`. (See [body-parser](https://www.npmjs.com/package/body-parser))
-- `cookieParser`: `{ options?: cookieParser.CookieParseOptions, secret?: string | string[] }`. (See [cookie-parser](https://www.npmjs.com/package/cookie-parser))
+- __auth__: (See [@novice1/app](https://www.npmjs.com/package/@novice1/app))
+- __middlewares__: (See [@novice1/app](https://www.npmjs.com/package/@novice1/app))
+- __validators__: (See [@novice1/app](https://www.npmjs.com/package/@novice1/app). The default validator is [@novice1/validator-joi](https://www.npmjs.com/package/@novice1/validator-joi) if none was specified.)
+- __validatorOnError__: `ErrorRequestHandler`. Only used for the default validator.
+- __cors__: `cors.CorsOptions | cors.CorsOptionsDelegate<cors.CorsRequest> | boolean`. (See [cors](https://www.npmjs.com/package/cors))
+- __bodyParser__: `{ json?: bodyParser.OptionsJson, urlencoded?: bodyParser.OptionsUrlencoded }`. (See [body-parser](https://www.npmjs.com/package/body-parser))
+- __cookieParser__: `{ options?: cookieParser.CookieParseOptions, secret?: string | string[] }`. (See [cookie-parser](https://www.npmjs.com/package/cookie-parser))
 
 ```ts
 import { Frame } from '@novice1/frame'
