@@ -173,6 +173,11 @@ export class Frame extends FrameworkApp {
                 this.docs.openapi.setLicense(docsConfig?.license);
         }
 
+        if(docsConfig?.version) {
+            this.docs.openapi.setVersion(docsConfig.version);
+            this.docs.postman.setVersion(docsConfig.version); 
+        }
+
         if (docsConfig?.host?.url) {
             const hostUrl = docsConfig.host.url;
             const regex = /(?<=(?<!\{)\{)[^{}]*(?=\}(?!\}))/g;

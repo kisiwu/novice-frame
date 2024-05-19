@@ -31,6 +31,7 @@ export interface DocsConfig {
     consumes?: string[]
     security?: BaseAuthUtil
     license?: LicenseObject | string
+    version?: string
     host?: ServerObject
     examples?: Record<string, ReferenceObject | ExampleObject>
     schemas?: Record<string, SchemaObject | ReferenceObject>
@@ -47,6 +48,7 @@ export class DocsShape implements IDocsShape {
     #title?: string
     #consumes?: string[]
     #license?: LicenseObject
+    #version?: string
     #host?: ServerObject
     #logo?: DocsLogo
     #tagGroups?: Record<string, string[]>
@@ -125,6 +127,11 @@ export class DocsShape implements IDocsShape {
         return this
     }
 
+    setVersion(version: string): this {
+        this.#version = version
+        return this
+    }
+
     setHost(url: string, description?: string, variables?: Record<string, ServerVariableObject>): this
     setHost(server: ServerObject): this
     setHost(value: ServerObject | string, description?: string, variables?: Record<string, ServerVariableObject>): this {
@@ -173,6 +180,7 @@ export class DocsShape implements IDocsShape {
             title: this.#title,
             consumes: this.#consumes,
             license: this.#license,
+            version: this.#version,
             host: this.#host,
             options: {
                 logo: this.#logo,
