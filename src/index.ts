@@ -215,6 +215,25 @@ export class Frame extends FrameworkApp {
             this.docs.openapi.setResponses(docsConfig?.responses);
         }
 
+        if(docsConfig?.tags) {
+            for(const tag of docsConfig.tags) {
+                this.docs.openapi.addTag({
+                    name: tag.name, 
+                    description: tag.description, 
+                    externalDocs: tag.externalDocs
+                });
+                this.docs.postman.addFolder({
+                    item: [],
+                    auth: tag.auth,
+                    description: tag.description,
+                    event: tag.event,
+                    name: tag.name,
+                    protocolProfileBehavior: tag.protocolProfileBehavior,
+                    variable: tag.variable
+                }); 
+            }
+        }
+
         if(docsConfig?.options) {
             this.#docsOptions = docsConfig.options
         }

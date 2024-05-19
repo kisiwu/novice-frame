@@ -4,8 +4,10 @@ import {
     ReferenceObject, 
     SchemaObject, 
     ServerObject, 
-    ServerVariableObject 
+    ServerVariableObject, 
+    TagObject
 } from '@novice1/api-doc-generator/lib/generators/openapi/definitions'
+import { Folder } from '@novice1/api-doc-generator/lib/generators/postman/definitions'
 import { BaseAuthUtil } from '@novice1/api-doc-generator/lib/utils/auth/baseAuthUtils'
 import { BaseResponseUtil } from '@novice1/api-doc-generator/lib/utils/responses/baseResponseUtils'
 import { ExampleShape } from './classes/ExampleShape'
@@ -14,6 +16,8 @@ import { SchemaShape } from './classes/SchemaShape'
 export * from './classes/ExampleShape'
 export * from './classes/MediaTypeShape'
 export * from './classes/SchemaShape'
+
+export type DocsTag = TagObject & Omit<Folder, 'item'>
 
 export interface DocsLogo {
     url: string
@@ -36,6 +40,7 @@ export interface DocsConfig {
     examples?: Record<string, ReferenceObject | ExampleObject>
     schemas?: Record<string, SchemaObject | ReferenceObject>
     responses?: BaseResponseUtil
+    tags?: DocsTag[]
     options?: DocsOptions
 }
 
@@ -50,6 +55,7 @@ export class DocsShape implements IDocsShape {
     #license?: LicenseObject
     #version?: string
     #host?: ServerObject
+    #tags?: DocsTag[]
     #logo?: DocsLogo
     #tagGroups?: Record<string, string[]>
 
@@ -147,6 +153,11 @@ export class DocsShape implements IDocsShape {
         return this
     }
 
+    setTags(tags: DocsTag[]): this {
+        this.#tags = tags
+        return this
+    }
+
     setExamples(examples: Iterable<ExampleShape>): this
     setExamples(examples: Record<string, ReferenceObject | ExampleObject>): this
     setExamples(examples: Iterable<ExampleShape> | Record<string, ReferenceObject | ExampleObject>): this {
@@ -182,6 +193,7 @@ export class DocsShape implements IDocsShape {
             license: this.#license,
             version: this.#version,
             host: this.#host,
+            tags: this.#tags,
             options: {
                 logo: this.#logo,
                 tagGroups: this.#tagGroups

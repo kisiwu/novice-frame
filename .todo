@@ -17,7 +17,8 @@
     [x] SchemaShape
     [x] ResponseShape (extends ResponseUtil)
     [x] implement ExampleShape, ResponseShape and SchemaShape in DocsShape (for openapi components)
-    [ ] docs version (for openapi)
+    [x] docs version (for openapi)
+    [x] docs tag/folder (for openapi)
     [ ] multer and files validation functions
 
 [ ] to fix:

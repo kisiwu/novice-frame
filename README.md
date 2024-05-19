@@ -1,6 +1,8 @@
 # @novice1/frame
 Web framework for building APIs.
 
+Based on [@novice1/app](https://www.npmjs.com/package/@novice1/app).
+
 ## Installation
 
 ```bash
@@ -44,7 +46,7 @@ app.listen(3000)
 
 ### Framework configuration
 
-Based on [@novice1/app](https://www.npmjs.com/package/@novice1/app).
+Based on [@novice1/app](https://www.npmjs.com/package/@novice1/app) `framework` configuration.
 
 You can configure:
 
