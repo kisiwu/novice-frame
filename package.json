@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "description": "Web framework for building APIs.",
   "main": "lib/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kisiwu/novice-frame.git"
+  },
   "scripts": {
     "build": "npm run lint && tsc",
     "doc": "typedoc",
