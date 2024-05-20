@@ -22,6 +22,12 @@ export type DocsTag = TagObject & Omit<Folder, 'item'>
 
 export type DocsSwaggerUIOptions = Omit<Omit<SwaggerUiOptions, 'swaggerUrl'>, 'swaggerUrls'>
 
+export type DocsRedocOptions = {
+    customCss?: string
+    customCssUrl?: string
+    customJs?: string
+}
+
 export interface DocsLogo {
     url: string
     alt?: string
@@ -30,6 +36,7 @@ export interface DocsLogo {
 export interface DocsOptions {
     logo?: DocsLogo,
     tagGroups?: Record<string, string[]>
+    redoc?: DocsRedocOptions
     swagger?: DocsSwaggerUIOptions
 }
 
@@ -62,6 +69,7 @@ export class DocsShape implements IDocsShape {
     #tags?: DocsTag[]
     #logo?: DocsLogo
     #tagGroups?: Record<string, string[]>
+    #redoc?: DocsRedocOptions
     #swaggerUIOptions?: DocsSwaggerUIOptions
 
     #examples?: Record<string, ReferenceObject | ExampleObject>
@@ -138,6 +146,11 @@ export class DocsShape implements IDocsShape {
         return this
     }
 
+    setRedocOptions(value: DocsRedocOptions): this {
+        this.#redoc = value
+        return this
+    }
+
     setSwaggerUIOptions(value: DocsSwaggerUIOptions): this {
         this.#swaggerUIOptions = value
         return this
@@ -207,6 +220,7 @@ export class DocsShape implements IDocsShape {
             options: {
                 logo: this.#logo,
                 tagGroups: this.#tagGroups,
+                redoc: this.#redoc,
                 swagger: this.#swaggerUIOptions
             },
 

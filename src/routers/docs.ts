@@ -5,6 +5,11 @@ import { OpenAPI, Postman } from '@novice1/api-doc-generator';
 import { DocsOptions } from '../docs';
 
 export function createDocsRouter(path: string, { openapi, postman }: { openapi: OpenAPI, postman: Postman }, options?: DocsOptions) {
+
+    const redocCustomCss = options?.redoc?.customCss
+    const redocCustomCssUrl = options?.redoc?.customCssUrl
+    const redocCustomJs = options?.redoc?.customJs
+
     const swaggerUIController: RequestHandler = (req, res, next) => {
         const swaggerDocument = openapi.result()
         const swaggerUIOptions = options?.swagger || { }
@@ -24,7 +29,7 @@ export function createDocsRouter(path: string, { openapi, postman }: { openapi: 
         <meta charset="utf-8"/>
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet">
-    
+        ${redocCustomCssUrl ? `<link href="${redocCustomCssUrl}" rel="stylesheet">` : ''}
         <!--
         Redoc doesn't change outer page styles
         -->
@@ -33,11 +38,13 @@ export function createDocsRouter(path: string, { openapi, postman }: { openapi: 
             margin: 0;
             padding: 0;
           }
+          ${redocCustomCss}
         </style>
       </head>
       <body>
         <redoc spec-url='${path}/schema?json=true'></redoc>
         <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"> </script>
+        ${redocCustomJs ? `<script src="${redocCustomJs}"> </script>` : ''}
       </body>
     </html>
    `)
