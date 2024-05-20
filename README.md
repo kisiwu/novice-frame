@@ -500,8 +500,8 @@ const frame = new Frame({
 ```
 From the example above, we can understand that `ExampleShape` and `SchemaShape` help us create and reuse `examples` and `schemas`.
 
-If you know that you are going to reuse `responses`, `schemas` or `examples`, create shapes for them. The benefits of using those shapes are:
-- they will make your API schema shorter ([localhost:3000/docs/schema](http://localhost:3000/docs/schema)).
+If you know that you are going to use the same `responses`, `schemas` or `examples` multiple times, create shapes for them. The benefits of using those shapes are:
+- they will make your API [schema](http://localhost:3000/docs/schema) shorter by using [references](https://swagger.io/docs/specification/using-ref/).
 
 But of course to make it even shorter, you don't have to define responses at all 😉. /s
 
