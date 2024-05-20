@@ -14,11 +14,6 @@ Other dependencies:
 npm i @novice1/routing @novice1/api-doc-generator
 ```
 
-Dependencies for typescript:
-```bash
-npm i -D @types/express @types/node
-```
-
 ## Usage
 
 ### Simple usage
