@@ -12,12 +12,15 @@ import { BaseAuthUtil } from '@novice1/api-doc-generator/lib/utils/auth/baseAuth
 import { BaseResponseUtil } from '@novice1/api-doc-generator/lib/utils/responses/baseResponseUtils'
 import { ExampleShape } from './classes/ExampleShape'
 import { SchemaShape } from './classes/SchemaShape'
+import { SwaggerUiOptions } from 'swagger-ui-express'
 
 export * from './classes/ExampleShape'
 export * from './classes/MediaTypeShape'
 export * from './classes/SchemaShape'
 
 export type DocsTag = TagObject & Omit<Folder, 'item'>
+
+export type DocsSwaggerUIOptions = Omit<Omit<SwaggerUiOptions, 'swaggerUrl'>, 'swaggerUrls'>
 
 export interface DocsLogo {
     url: string
@@ -27,6 +30,7 @@ export interface DocsLogo {
 export interface DocsOptions {
     logo?: DocsLogo,
     tagGroups?: Record<string, string[]>
+    swagger?: DocsSwaggerUIOptions
 }
 
 export interface DocsConfig {
@@ -58,6 +62,7 @@ export class DocsShape implements IDocsShape {
     #tags?: DocsTag[]
     #logo?: DocsLogo
     #tagGroups?: Record<string, string[]>
+    #swaggerUIOptions?: DocsSwaggerUIOptions
 
     #examples?: Record<string, ReferenceObject | ExampleObject>
     #schemas?: Record<string, ReferenceObject | SchemaObject>
@@ -133,6 +138,11 @@ export class DocsShape implements IDocsShape {
         return this
     }
 
+    setSwaggerUIOptions(value: DocsSwaggerUIOptions): this {
+        this.#swaggerUIOptions = value
+        return this
+    }
+
     setVersion(version: string): this {
         this.#version = version
         return this
@@ -196,7 +206,8 @@ export class DocsShape implements IDocsShape {
             tags: this.#tags,
             options: {
                 logo: this.#logo,
-                tagGroups: this.#tagGroups
+                tagGroups: this.#tagGroups,
+                swagger: this.#swaggerUIOptions
             },
 
             examples: this.#examples,

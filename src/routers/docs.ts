@@ -7,7 +7,11 @@ import { DocsOptions } from '../docs';
 export function createDocsRouter(path: string, { openapi, postman }: { openapi: OpenAPI, postman: Postman }, options?: DocsOptions) {
     const swaggerUIController: RequestHandler = (req, res, next) => {
         const swaggerDocument = openapi.result()
-        return swaggerUi.setup(swaggerDocument)(req, res, next)
+        const swaggerUIOptions = options?.swagger || { }
+        if (typeof swaggerUIOptions.customSiteTitle == 'undefined') {
+            swaggerUIOptions.customSiteTitle = openapi.getTitle() 
+        }
+        return swaggerUi.setup(swaggerDocument, swaggerUIOptions)(req, res, next)
     }
 
     const redocController: RequestHandler = (_, res) => {
