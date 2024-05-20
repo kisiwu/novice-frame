@@ -1,13 +1,13 @@
 {
-  "name": "novice-frame",
-  "version": "1.0.0",
+  "name": "@novice1/frame",
+  "version": "0.1.0",
   "description": "Web framework for building APIs.",
   "main": "lib/index.js",
   "scripts": {
     "build": "npm run lint && tsc",
-    "dev": "ts-node ./src/index.ts",
+    "doc": "typedoc",
     "lint": "eslint src/**/*.ts",
-    "test": "ts-node ./test/server.ts"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [
     "api",
@@ -45,6 +45,7 @@
     "@typescript-eslint/parser": "^7.9.0",
     "eslint": "^8.57.0",
     "ts-node": "^10.9.2",
+    "typedoc": "^0.25.13",
     "typescript": "^5.4.5"
   }
 }

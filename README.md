@@ -76,9 +76,7 @@ By default, the documentation of your API gets generated and accessible at:
 - `/docs/schema`,
 - `/docs/schema?format=postman`.
 
-You can add more info to the documentation and change the `/docs` prefix to somthing else if you want.
-
-TODO: LINK TO REFERENCE
+You can add more info to the documentation and change the `/docs` prefix to something else if you want.
 
 ```ts
 import { Frame } from '@novice1/frame'
