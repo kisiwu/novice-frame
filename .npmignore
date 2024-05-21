@@ -1,6 +1,6 @@
 .github
 typedocIncludes
-docs
+/docs
 private
 src
 test
