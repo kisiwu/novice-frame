@@ -45,6 +45,8 @@ export interface FrameOptions extends Options {
 
 export class Frame extends FrameworkApp {
 
+    #docsDisabled: boolean = false
+
     #docsPath: string = '/docs'
 
     #docsOptions: DocsOptions = {}
@@ -133,7 +135,11 @@ export class Frame extends FrameworkApp {
             } else {
                 docsConfig = config?.docs
             }
-        }  
+        }
+        
+        if (docsConfig?.disabled) {
+            this.#docsDisabled = !!(docsConfig.disabled)
+        }
 
         if (docsConfig?.path) {
             this.#docsPath = docsConfig.path
@@ -242,7 +248,9 @@ export class Frame extends FrameworkApp {
     }
 
     private _addDocsRoute() {
-        this.addRouters(createDocsRouter(this.#docsPath, this.docs, this.#docsOptions))
+        if(!this.#docsDisabled) {
+            this.addRouters(createDocsRouter(this.#docsPath, this.docs, this.#docsOptions))
+        }
     }
 
     /**

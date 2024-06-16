@@ -41,6 +41,10 @@ export interface DocsOptions {
 }
 
 export interface DocsConfig {
+    /**
+     * Disable docs routes.
+     */
+    disabled?: boolean
     path?: string
     title?: string
     consumes?: string[]
@@ -60,6 +64,7 @@ export interface IDocsShape {
 }
 
 export class DocsShape implements IDocsShape {
+    #disabled?: boolean
     #path?: string
     #title?: string
     #consumes?: string[]
@@ -90,6 +95,16 @@ export class DocsShape implements IDocsShape {
             values[v.getName()] = v.toObject()
         }
         return values
+    }
+
+    disable(): this {
+        this.#disabled = true
+        return this
+    }
+
+    enable(): this {
+        this.#disabled = false
+        return this
     }
 
     setPath(path: string): this {
@@ -210,6 +225,7 @@ export class DocsShape implements IDocsShape {
 
     docs(): DocsConfig {
         return {
+            disabled: this.#disabled,
             path: this.#path,
             title: this.#title,
             consumes: this.#consumes,
