@@ -4,7 +4,7 @@ import express, {} from 'express';
 import * as bodyParser from 'body-parser';
 import cors from 'cors';
 import { FrameworkApp, FrameworkOptions as BaseFrameworkOptions, Options } from '@novice1/app';
-import { OpenAPI, Postman } from '@novice1/api-doc-generator';
+import { OAuth2Util, OpenAPI, Postman } from '@novice1/api-doc-generator';
 import validatorJoi from '@novice1/validator-joi';
 
 import routing from '@novice1/routing';
@@ -161,17 +161,6 @@ export class Frame extends FrameworkApp {
             this.docs.postman.setConsumes(['application/json']);
         }
 
-        if (docsConfig?.security) {
-            this.docs.openapi.addSecurityScheme(docsConfig?.security)
-                .setDefaultSecurity(docsConfig?.security);
-            this.docs.postman.setDefaultSecurity(docsConfig?.security);
-        } else if (config.security) {
-            const securityScheme = config.security.scheme()
-            this.docs.openapi.addSecurityScheme(securityScheme)
-                .setDefaultSecurity(securityScheme);
-            this.docs.postman.setDefaultSecurity(securityScheme);
-        }
-
         if (docsConfig?.license) {
             if (typeof docsConfig?.license === 'string')
                 this.docs.openapi.setLicense(docsConfig?.license);
@@ -207,6 +196,20 @@ export class Frame extends FrameworkApp {
                     }
                 )
             }
+        }
+
+        if (docsConfig?.security) {
+            this.docs.openapi.addSecurityScheme(docsConfig?.security)
+                .setDefaultSecurity(docsConfig?.security);
+            this.docs.postman.setDefaultSecurity(docsConfig?.security);
+        } else if (config.security) {
+            const securityScheme = config.security.scheme()
+            this.docs.openapi.addSecurityScheme(securityScheme)
+                .setDefaultSecurity(securityScheme);
+            if (securityScheme instanceof OAuth2Util && !securityScheme.getHost() && this.docs.postman.getHost().length) {
+                securityScheme.setHost(this.docs.postman.getHost()[0])
+            }
+            this.docs.postman.setDefaultSecurity(securityScheme);
         }
 
         if(docsConfig?.examples) {
