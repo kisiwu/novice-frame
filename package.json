@@ -1,6 +1,6 @@
 {
   "name": "@novice1/frame",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Web framework for building APIs.",
   "main": "lib/index.js",
   "repository": {
