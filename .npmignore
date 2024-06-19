@@ -6,6 +6,7 @@ src
 test
 types
 todo
+.todo
 typedoc.json
 
 # Logs
