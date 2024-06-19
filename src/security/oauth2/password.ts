@@ -238,7 +238,7 @@ export class OAuth2PasswordShape extends OAuth2Shape {
                     errorDescription = 'Request was missing the \'username\' parameter.'
                 } else if (!(req.body.password && typeof req.body.password === 'string')) {
                     error = 'invalid_request'
-                    errorDescription = 'Request was missing the \'client_secret\' parameter.'
+                    errorDescription = 'Request was missing the \'password\' parameter.'
                 }
                 req.body.grant_type === 'password'
                 return res.status(400).json(new OAuth2ErrorResponse(error, errorDescription))
