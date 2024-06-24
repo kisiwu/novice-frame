@@ -1,6 +1,6 @@
 {
   "name": "@novice1/frame",
-  "version": "0.1.5",
+  "version": "0.1.6",
   "description": "Web framework for building APIs.",
   "main": "lib/index.js",
   "repository": {
@@ -24,7 +24,7 @@
   "author": "demingongo",
   "license": "MIT",
   "dependencies": {
-    "@novice1/api-doc-generator": "^0.2.3",
+    "@novice1/api-doc-generator": "^0.2.4",
     "@novice1/app": "^0.3.3",
     "@novice1/routing": "^1.1.5",
     "@novice1/validator-joi": "^0.1.4",
