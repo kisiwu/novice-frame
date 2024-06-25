@@ -330,6 +330,10 @@ export class OAuth2ACShape extends OAuth2Shape {
                         refreshToken: req.body.refresh_token
                     }
 
+                    if (req.body.scope && typeof req.body.scope === 'string') {
+                        params.scope = req.body.scope
+                    }
+
                     const handler = this.refreshTokenRoute?.getHandler()
                     if (handler) {
                         return handler(params, req, res, next)
@@ -389,6 +393,10 @@ export class OAuth2ACShape extends OAuth2Shape {
                         clientSecret: req.body.client_secret,
                         grantType: req.body.grant_type,
                         refreshToken: req.body.refresh_token
+                    }
+
+                    if (req.body.scope && typeof req.body.scope === 'string') {
+                        params.scope = req.body.scope
                     }
 
                     const handler = this.refreshTokenRoute?.getHandler()

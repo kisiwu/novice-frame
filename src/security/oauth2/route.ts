@@ -4,9 +4,10 @@ import { ParsedQs } from 'qs'
 
 export interface OAuth2RefreshTokenParams {
     grantType: string
+    refreshToken: string
     clientId: string
     clientSecret: string
-    refreshToken: string
+    scope?: string
 }
 
 export interface OAuth2Handler<P> {

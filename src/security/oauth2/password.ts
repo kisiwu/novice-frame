@@ -88,6 +88,39 @@ export class OAuth2PasswordShape extends OAuth2Shape {
         this.refreshTokenRoute = refreshTokenRoute
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    private _retrieveClientAuthentication(req: routing.Request<core.ParamsDictionary, any, any, ParsedQs, Record<string, any>, any>): {clientId?: string, clientSecret?: string} {
+        const result: { clientId?: string, clientSecret?: string } = {}
+        let tmpClientId: string | undefined,
+            tmpClientSecret: string | undefined;
+
+        if (this.isClientAuthenticationToBody()) {
+            if (typeof req.body.client_id === 'string') {
+                tmpClientId = req.body.client_id
+            }
+            if (typeof req.body.client_secret === 'string') {
+                tmpClientSecret = req.body.client_secret
+            }
+        } else if (this.isClientAuthenticationToHeader()) {
+            const authHeaderValue = req.header('authorization')
+            if (authHeaderValue) {
+                // remove 'Basic ' and convert the base64 to string
+                const value = Buffer.from(authHeaderValue.substring(5), 'base64').toString();
+                // split client_id and client_secret from string
+                [tmpClientId, tmpClientSecret] = value.split(':')
+            }
+        }
+
+        if (tmpClientId) {
+            result.clientId = tmpClientId
+        }
+        if (tmpClientSecret) {
+            result.clientSecret = tmpClientSecret
+        }
+
+        return result
+    }
+
     clientAuthenticationToBody(): this {
         this.clientAuthentication = ClientAuthentication.body
         return this
@@ -140,41 +173,17 @@ export class OAuth2PasswordShape extends OAuth2Shape {
                 req.body.password && typeof req.body.password === 'string' &&
                 req.body.grant_type === 'password'
             ) {
-                let clientId: string,
-                    clientSecret: string,
-                    tmpClientId: string | undefined,
-                    tmpClientSecret: string | undefined;
+                const clientAuthentication = this._retrieveClientAuthentication(req)
 
-                if (this.isClientAuthenticationToBody()) {
-                    if (typeof req.body.client_id === 'string') {
-                        tmpClientId = req.body.client_id
-                    }
-                    if (typeof req.body.client_secret === 'string') {
-                        tmpClientSecret = req.body.client_secret
-                    }
-                } else if (this.isClientAuthenticationToHeader()) {
-                    const authHeaderValue = req.header('authorization')
-                    if (authHeaderValue) {
-                        // remove 'Basic ' and convert the base64 to string
-                        const value = Buffer.from(authHeaderValue.substring(5), 'base64').toString();
-                        // split client_id and client_secret from string
-                        [tmpClientId, tmpClientSecret] = value.split(':')
-                    }
-                }
-
-                if (tmpClientId) {
-                    clientId = tmpClientId
-                } else {
+                if (!clientAuthentication.clientId) {
                     return res.status(400).json(new OAuth2InvalidRequestResponse('Request was missing the \'client_id\' parameter.'))
                 }
-                if (tmpClientSecret) {
-                    clientSecret = tmpClientSecret
-                } else {
+                if (!clientAuthentication.clientSecret) {
                     return res.status(400).json(new OAuth2InvalidRequestResponse('Request was missing the \'client_secret\' parameter.'))
                 }
                 const params: OAuth2PasswordTokenParams = {
-                    clientId: clientId,
-                    clientSecret: clientSecret,
+                    clientId: clientAuthentication.clientId,
+                    clientSecret: clientAuthentication.clientSecret,
                     grantType: req.body.grant_type,
                     username: req.body.username,
                     password: req.body.password,
@@ -193,16 +202,20 @@ export class OAuth2PasswordShape extends OAuth2Shape {
                 refreshTokenUrl == tokenUrl &&
                 req.body.grant_type === 'refresh_token'
             ) {
+                const clientAuthentication = this._retrieveClientAuthentication(req)
                 if (
-                    req.body.client_id && typeof req.body.client_id === 'string' &&
-                    req.body.client_secret && typeof req.body.client_secret === 'string' &&
+                    clientAuthentication.clientId && clientAuthentication.clientSecret &&
                     req.body.refresh_token && typeof req.body.refresh_token === 'string'
                 ) {
                     const params: OAuth2RefreshTokenParams = {
-                        clientId: req.body.client_id,
-                        clientSecret: req.body.client_secret,
+                        clientId: clientAuthentication.clientId,
+                        clientSecret: clientAuthentication.clientSecret,
                         grantType: req.body.grant_type,
                         refreshToken: req.body.refresh_token
+                    }
+
+                    if (req.body.scope && typeof req.body.scope === 'string') {
+                        params.scope = req.body.scope
                     }
 
                     const handler = this.refreshTokenRoute?.getHandler()
@@ -214,10 +227,10 @@ export class OAuth2PasswordShape extends OAuth2Shape {
                 } else {
                     let error: OAuth2Error = 'unauthorized_client';
                     let errorDescription = ''
-                    if (!(req.body.client_id && typeof req.body.client_id === 'string')) {
+                    if (!clientAuthentication.clientId) {
                         error = 'invalid_request'
                         errorDescription = 'Request was missing the \'client_id\' parameter.'
-                    } else if (!(req.body.client_secret && typeof req.body.client_secret === 'string')) {
+                    } else if (!clientAuthentication.clientSecret) {
                         error = 'invalid_request'
                         errorDescription = 'Request was missing the \'client_secret\' parameter.'
                     } else if (!(req.body.refresh_token && typeof req.body.refresh_token === 'string')) {
@@ -253,18 +266,22 @@ export class OAuth2PasswordShape extends OAuth2Shape {
                     undoc: true
                 }
             }, (req, res, next) => {
+                const clientAuthentication = this._retrieveClientAuthentication(req)
                 // validating body
                 if (
-                    req.body.client_id && typeof req.body.client_id === 'string' &&
-                    req.body.client_secret && typeof req.body.client_secret === 'string' &&
+                    clientAuthentication.clientId && clientAuthentication.clientSecret &&
                     req.body.refresh_token && typeof req.body.refresh_token === 'string' &&
                     req.body.grant_type === 'refresh_token'
                 ) {
                     const params: OAuth2RefreshTokenParams = {
-                        clientId: req.body.client_id,
-                        clientSecret: req.body.client_secret,
+                        clientId: clientAuthentication.clientId,
+                        clientSecret: clientAuthentication.clientSecret,
                         grantType: req.body.grant_type,
                         refreshToken: req.body.refresh_token
+                    }
+
+                    if (req.body.scope && typeof req.body.scope === 'string') {
+                        params.scope = req.body.scope
                     }
 
                     const handler = this.refreshTokenRoute?.getHandler()
@@ -279,10 +296,10 @@ export class OAuth2PasswordShape extends OAuth2Shape {
                     if (req.body.grant_type != 'refresh_token') {
                         error = 'unsupported_grant_type'
                         errorDescription = `Request does not support the 'grant_type' '${req.body.grant_type}'.`
-                    } else if (!(req.body.client_id && typeof req.body.client_id === 'string')) {
+                    } else if (!clientAuthentication.clientId) {
                         error = 'invalid_request'
                         errorDescription = 'Request was missing the \'client_id\' parameter.'
-                    } else if (!(req.body.client_secret && typeof req.body.client_secret === 'string')) {
+                    } else if (!clientAuthentication.clientSecret) {
                         error = 'invalid_request'
                         errorDescription = 'Request was missing the \'client_secret\' parameter.'
                     } else if (!(req.body.refresh_token && typeof req.body.refresh_token === 'string')) {
