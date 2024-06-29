@@ -3,7 +3,7 @@ import { OAuth2Error, OAuth2ErrorResponse, OAuth2InvalidRequestResponse, OAuth2U
 import * as core from 'express-serve-static-core'
 import { ParsedQs } from 'qs'
 import routing, {IRouter} from '@novice1/routing'
-import { IOAuth2Route, OAuth2Handler, OAuth2RefreshTokenParams, OAuth2RefreshTokenRoute } from './route'
+import { IOAuth2Route, OAuth2BadRequestHandler, OAuth2Handler, OAuth2RefreshTokenParams, OAuth2RefreshTokenRoute } from './route'
 import { OAuth2Shape } from '../shapes'
 import { BaseAuthUtil } from '@novice1/api-doc-generator/lib/utils/auth/baseAuthUtils'
 
@@ -50,6 +50,7 @@ export class OAuth2ClientCredsTokenRoute<
 > implements IOAuth2Route {
     protected url: string
     protected handler?: OAuth2ClientCredsTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>
+    protected badRequestHandler?: OAuth2BadRequestHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>
 
     constructor(url: string, handler?: OAuth2ClientCredsTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>) {
         this.url = url
@@ -67,6 +68,20 @@ export class OAuth2ClientCredsTokenRoute<
 
     getHandler(): OAuth2ClientCredsTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType> | undefined {
         return this.handler
+    }
+
+    setBadRequestHandler(handler?: OAuth2BadRequestHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>): this {
+        this.badRequestHandler = handler
+        return this
+    }
+
+    resetBadRequestHandler(): this {
+        this.badRequestHandler = undefined
+        return this
+    }
+
+    getBadRequestHandler(): OAuth2BadRequestHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType> | undefined {
+        return this.badRequestHandler
     }
 }
 
@@ -195,7 +210,13 @@ export class OAuth2ClientCredsShape extends OAuth2Shape {
                         error = 'invalid_request'
                         errorDescription = 'Request was missing the \'refresh_token\' parameter.'
                     }
-                    return res.status(400).json(new OAuth2ErrorResponse(error, errorDescription))
+                    const err = new OAuth2ErrorResponse(error, errorDescription)
+                    const handler = this.refreshTokenRoute?.getBadRequestHandler()
+                    if (handler) {
+                        return handler(err, req, res, next)
+                    } else {
+                        return res.status(400).json(err)
+                    }
                 }
             } else {
                 let error: OAuth2Error = 'unauthorized_client';
@@ -206,7 +227,13 @@ export class OAuth2ClientCredsShape extends OAuth2Shape {
                     errorDescription = `Request does not support the 'grant_type' '${req.body.grant_type}'.`
                 }
                 req.body.grant_type === 'client_credentials'
-                return res.status(400).json(new OAuth2ErrorResponse(error, errorDescription))
+                const err = new OAuth2ErrorResponse(error, errorDescription)
+                const handler = this.tokenRoute.getBadRequestHandler()
+                if (handler) {
+                    return handler(err, req, res, next)
+                } else {
+                    return res.status(400).json(err)
+                }
             }
         });
 
@@ -258,7 +285,13 @@ export class OAuth2ClientCredsShape extends OAuth2Shape {
                         error = 'invalid_request'
                         errorDescription = 'Request was missing the \'refresh_token\' parameter.'
                     }
-                    return res.status(400).json(new OAuth2ErrorResponse(error, errorDescription))
+                    const err = new OAuth2ErrorResponse(error, errorDescription)
+                    const handler = this.refreshTokenRoute?.getBadRequestHandler()
+                    if (handler) {
+                        return handler(err, req, res, next)
+                    } else {
+                        return res.status(400).json(err)
+                    }
                 }
             });
         }

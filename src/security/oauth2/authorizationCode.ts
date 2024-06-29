@@ -3,7 +3,7 @@ import * as core from 'express-serve-static-core'
 import { ParsedQs } from 'qs'
 import { OAuth2Error, OAuth2ErrorResponse, OAuth2UnauthorizedClientResponse } from './responses'
 import { GrantType, OAuth2Util } from '@novice1/api-doc-generator'
-import { IOAuth2Route, OAuth2Handler, OAuth2RefreshTokenParams, OAuth2RefreshTokenRoute } from './route'
+import { IOAuth2Route, OAuth2BadRequestHandler, OAuth2Handler, OAuth2RefreshTokenParams, OAuth2RefreshTokenRoute } from './route'
 import { BaseAuthUtil } from '@novice1/api-doc-generator/lib/utils/auth/baseAuthUtils'
 import { OAuth2Shape } from '../shapes'
 
@@ -91,6 +91,7 @@ export class OAuth2ACAuthorizationRoute<
     protected url: string
     protected handler?: OAuth2ACAuthorizationHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>
     protected postHandler?: OAuth2ACAuthorizationHandler<P, PostResBody, PostReqBody, PostReqQuery, PostLocals, PostMetaResType>
+    protected badRequestHandler?: OAuth2BadRequestHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>
 
     constructor(
         url: string, 
@@ -123,6 +124,20 @@ export class OAuth2ACAuthorizationRoute<
     getPostHandler(): OAuth2ACAuthorizationHandler<P, PostResBody, PostReqBody, PostReqQuery, PostLocals, PostMetaResType> | undefined {
         return this.postHandler
     }
+
+    setBadRequestHandler(handler?: OAuth2BadRequestHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>): this {
+        this.badRequestHandler = handler
+        return this
+    }
+
+    resetBadRequestHandler(): this {
+        this.badRequestHandler = undefined
+        return this
+    }
+
+    getBadRequestHandler(): OAuth2BadRequestHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType> | undefined {
+        return this.badRequestHandler
+    }
 }
 
 export class OAuth2ACTokenRoute<
@@ -139,6 +154,7 @@ export class OAuth2ACTokenRoute<
 > implements IOAuth2Route {
     protected url: string
     protected handler?: OAuth2ACTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>
+    protected badRequestHandler?: OAuth2BadRequestHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>
 
     constructor(url: string, handler?: OAuth2ACTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>) {
         this.url = url
@@ -156,6 +172,20 @@ export class OAuth2ACTokenRoute<
 
     getHandler(): OAuth2ACTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType> | undefined {
         return this.handler
+    }
+
+    setBadRequestHandler(handler?: OAuth2BadRequestHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>): this {
+        this.badRequestHandler = handler
+        return this
+    }
+
+    resetBadRequestHandler(): this {
+        this.badRequestHandler = undefined
+        return this
+    }
+
+    getBadRequestHandler(): OAuth2BadRequestHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType> | undefined {
+        return this.badRequestHandler
     }
 }
 
@@ -243,11 +273,6 @@ export class OAuth2ACShape extends OAuth2Shape {
                 }
 
                 if (req.method.toLowerCase() === 'get') {
-                    //if (this.methods.authorizationGet) {
-                    //    return this.methods.authorizationGet(params, req, res, next)
-                    //} else {
-                    //    return res.status(401).send('<h1>OAuth Error</h1><p>Authorization unavailable</p>')
-                    //}
                     const handler = this.authorizationRoute.getHandler()
                     if (handler) {
                         return handler(params, req, res, next)
@@ -263,7 +288,21 @@ export class OAuth2ACShape extends OAuth2Shape {
                     }
                 }
             } else {
-                return res.status(401).send('<h1>OAuth Error</h1>')
+                let errorDescription = ''
+                if (!(req.query.client_id && typeof req.query.client_id === 'string')) {
+                    errorDescription = 'Request was missing the \'client_id\' parameter.'
+                } else if (!(req.query.response_type === 'code')) {
+                    errorDescription = `Request does not support the 'response_type' '${req.body.response_type}'.`
+                } else if (!(req.query.redirect_uri && typeof req.query.redirect_uri === 'string')) {
+                    errorDescription = 'Request was missing the \'redirect_uri\' parameter.'
+                }
+                const err = new OAuth2ErrorResponse('invalid_request', errorDescription)
+                const handler = this.authorizationRoute.getBadRequestHandler()
+                if (handler) {
+                    return handler(err, req, res, next)
+                } else {
+                    return res.status(400).json(err)
+                }
             }
         };
         router
@@ -353,7 +392,13 @@ export class OAuth2ACShape extends OAuth2Shape {
                         error = 'invalid_request'
                         errorDescription = 'Request was missing the \'refresh_token\' parameter.'
                     }
-                    return res.status(400).json(new OAuth2ErrorResponse(error, errorDescription))
+                    const err = new OAuth2ErrorResponse(error, errorDescription)
+                    const handler = this.refreshTokenRoute?.getBadRequestHandler()
+                    if (handler) {
+                        return handler(err, req, res, next)
+                    } else {
+                        return res.status(400).json(err)
+                    }
                 }
             } else {
                 let error: OAuth2Error = 'unauthorized_client';
@@ -369,7 +414,13 @@ export class OAuth2ACShape extends OAuth2Shape {
                     error = 'invalid_request'
                     errorDescription = 'Request was missing the \'code\' parameter.'
                 }
-                return res.status(400).json(new OAuth2ErrorResponse(error, errorDescription))
+                const err = new OAuth2ErrorResponse(error, errorDescription)
+                const handler = this.tokenRoute.getBadRequestHandler()
+                if (handler) {
+                    return handler(err, req, res, next)
+                } else {
+                    return res.status(400).json(err)
+                }
             }
         });
 
@@ -421,7 +472,13 @@ export class OAuth2ACShape extends OAuth2Shape {
                         error = 'invalid_request'
                         errorDescription = 'Request was missing the \'refresh_token\' parameter.'
                     }
-                    return res.status(400).json(new OAuth2ErrorResponse(error, errorDescription))
+                    const err = new OAuth2ErrorResponse(error, errorDescription)
+                    const handler = this.refreshTokenRoute?.getBadRequestHandler()
+                    if (handler) {
+                        return handler(err, req, res, next)
+                    } else {
+                        return res.status(400).json(err)
+                    }
                 }
             });
         }
