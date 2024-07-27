@@ -292,7 +292,7 @@ export class OAuth2ACShape extends OAuth2Shape {
                 if (!(req.query.client_id && typeof req.query.client_id === 'string')) {
                     errorDescription = 'Request was missing the \'client_id\' parameter.'
                 } else if (!(req.query.response_type === 'code')) {
-                    errorDescription = `Request does not support the 'response_type' '${req.body.response_type}'.`
+                    errorDescription = `Request does not support the 'response_type' '${req.query.response_type}'.`
                 } else if (!(req.query.redirect_uri && typeof req.query.redirect_uri === 'string')) {
                     errorDescription = 'Request was missing the \'redirect_uri\' parameter.'
                 }
