@@ -1,6 +1,6 @@
 {
   "name": "@novice1/frame",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "Web framework for building APIs.",
   "main": "lib/index.js",
   "repository": {
@@ -28,14 +28,14 @@
     "@novice1/app": "^0.3.4",
     "@novice1/routing": "^1.1.6",
     "@novice1/validator-joi": "^0.1.5",
-    "@types/express": "^4.17.21",
+    "@types/express": "^5.0.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
     "express": "^4.21.0",
     "extend": "^3.0.2",
     "joi": "^17.13.3",
     "swagger-ui-express": "^5.0.1",
-    "tslib": "^2.6.3",
+    "tslib": "^2.7.0",
     "yamljs": "^0.3.0"
   },
   "devDependencies": {
@@ -45,11 +45,11 @@
     "@types/node": "^22.5.5",
     "@types/swagger-ui-express": "^4.1.6",
     "@types/yamljs": "^0.2.34",
-    "@typescript-eslint/eslint-plugin": "^7.18.0",
-    "@typescript-eslint/parser": "^7.18.0",
+    "@typescript-eslint/eslint-plugin": "^8.8.0",
+    "@typescript-eslint/parser": "^8.8.0",
     "eslint": "^8.57.0",
     "ts-node": "^10.9.2",
     "typedoc": "^0.26.7",
-    "typescript": "^5.5.2"
+    "typescript": "^5.6.2"
   }
 }

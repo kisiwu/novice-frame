@@ -226,7 +226,6 @@ export class OAuth2ClientCredsShape extends OAuth2Shape {
                     error = 'unsupported_grant_type'
                     errorDescription = `Request does not support the 'grant_type' '${req.body.grant_type}'.`
                 }
-                req.body.grant_type === 'client_credentials'
                 const err = new OAuth2ErrorResponse(error, errorDescription)
                 const handler = this.tokenRoute.getBadRequestHandler()
                 if (handler) {

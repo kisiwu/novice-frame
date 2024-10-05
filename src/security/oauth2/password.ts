@@ -274,7 +274,6 @@ export class OAuth2PasswordShape extends OAuth2Shape {
                     error = 'invalid_request'
                     errorDescription = 'Request was missing the \'password\' parameter.'
                 }
-                req.body.grant_type === 'password'
                 const err = new OAuth2ErrorResponse(error, errorDescription)
                 const handler = this.tokenRoute.getBadRequestHandler()
                 if (handler) {
