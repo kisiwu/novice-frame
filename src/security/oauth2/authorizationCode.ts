@@ -387,7 +387,7 @@ export class OAuth2ACShape extends OAuth2Shape {
                         params.scope = req.body.scope
                     }
 
-                    const handler = this.refreshTokenRoute?.getHandler()
+                    const handler = this.refreshTokenRoute?.getHandler() || this.refreshTokenRoute?.getUnsafeHandler?.()
                     if (handler) {
                         return handler(params, req, res, next)
                     } else {
@@ -488,7 +488,7 @@ export class OAuth2ACShape extends OAuth2Shape {
                         params.scope = req.body.scope
                     }
 
-                    const handler = this.refreshTokenRoute?.getHandler()
+                    const handler = this.refreshTokenRoute?.getHandler() || this.refreshTokenRoute?.getUnsafeHandler?.()
                     if (handler) {
                         return handler(params, req, res, next)
                     } else {
