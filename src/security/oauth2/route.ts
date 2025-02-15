@@ -11,6 +11,11 @@ export interface OAuth2RefreshTokenParams {
     scope?: string
 }
 
+export interface OAuth2RefreshTokenUnsafeParams
+    extends Omit<OAuth2RefreshTokenParams, 'clientSecret'> {
+    clientSecret?: string
+}
+
 export interface OAuth2Handler<P> {
     (
         params: P,
@@ -70,6 +75,27 @@ export interface OAuth2RefreshTokenHandler<
     ): void;
 }
 
+export interface OAuth2RefreshTokenUnsafeHandler<
+    P = core.ParamsDictionary,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ResBody = any,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ReqBody = any,
+    ReqQuery = ParsedQs,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Locals extends Record<string, any> = Record<string, any>,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    MetaResType = any
+> extends OAuth2Handler<OAuth2RefreshTokenUnsafeParams> {
+    // tslint:disable-next-line callable-types (This is extended from and can't extend from a type alias in ts<2.2)
+    (
+        params: OAuth2RefreshTokenUnsafeParams,
+        req: Request<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>,
+        res: core.Response<ResBody, Locals>,
+        next: core.NextFunction,
+    ): void;
+}
+
 export class OAuth2RefreshTokenRoute<
     P = core.ParamsDictionary,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -84,6 +110,7 @@ export class OAuth2RefreshTokenRoute<
 > {
     protected url: string
     protected handler?: OAuth2RefreshTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>
+    protected unsafeHandler?: OAuth2RefreshTokenUnsafeHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>
     protected badRequestHandler?: OAuth2BadRequestHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>
 
     constructor(url: string, handler?: OAuth2RefreshTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>) {
@@ -102,6 +129,15 @@ export class OAuth2RefreshTokenRoute<
 
     getHandler(): OAuth2RefreshTokenHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType> | undefined {
         return this.handler
+    }
+
+    setUnsafeHandler(unsafeHandler?: OAuth2RefreshTokenUnsafeHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>): this {
+        this.unsafeHandler = unsafeHandler
+        return this
+    }
+
+    getUnsafeHandler(): OAuth2RefreshTokenUnsafeHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType> | undefined {
+        return this.unsafeHandler
     }
 
     setBadRequestHandler(handler?: OAuth2BadRequestHandler<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>): this {
@@ -124,6 +160,8 @@ export interface IOAuth2Route {
     getUrl(): string
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     getHandler(): OAuth2Handler<any> | undefined
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    getUnsafeHandler?(): OAuth2Handler<any> | undefined
 
     getBadRequestHandler(): OAuth2AnyBadRequestHandler | undefined
 }

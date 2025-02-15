@@ -1,9 +1,20 @@
 import routing from '@novice1/routing'
 import * as core from 'express-serve-static-core'
 import { ParsedQs } from 'qs'
-import { OAuth2Error, OAuth2ErrorResponse, OAuth2UnauthorizedClientResponse } from './responses'
+import { 
+    OAuth2Error, 
+    OAuth2ErrorResponse, 
+    OAuth2UnauthorizedClientResponse 
+} from './responses'
 import { GrantType, OAuth2Util } from '@novice1/api-doc-generator'
-import { IOAuth2Route, OAuth2BadRequestHandler, OAuth2Handler, OAuth2RefreshTokenParams, OAuth2RefreshTokenRoute } from './route'
+import { 
+    IOAuth2Route, 
+    OAuth2BadRequestHandler, 
+    OAuth2Handler, 
+    OAuth2RefreshTokenParams, 
+    OAuth2RefreshTokenRoute, 
+    OAuth2RefreshTokenUnsafeParams 
+} from './route'
 import { BaseAuthUtil } from '@novice1/api-doc-generator/lib/utils/auth/baseAuthUtils'
 import { OAuth2Shape } from '../shapes'
 
@@ -357,10 +368,13 @@ export class OAuth2ACShape extends OAuth2Shape {
                 refreshTokenUrl == tokenUrl &&
                 req.body.grant_type === 'refresh_token'
             ) {
+                const hasClientId = req.body.client_id && typeof req.body.client_id === 'string'
+                const hasClientSecret = req.body.client_secret && typeof req.body.client_secret === 'string'
+                const hasRefreshToken = req.body.refresh_token && typeof req.body.refresh_token === 'string'
                 if (
-                    req.body.client_id && typeof req.body.client_id === 'string' &&
-                    req.body.client_secret && typeof req.body.client_secret === 'string' &&
-                    req.body.refresh_token && typeof req.body.refresh_token === 'string'
+                    hasClientId &&
+                    hasClientSecret &&
+                    hasRefreshToken
                 ) {
                     const params: OAuth2RefreshTokenParams = {
                         clientId: req.body.client_id,
@@ -374,6 +388,26 @@ export class OAuth2ACShape extends OAuth2Shape {
                     }
 
                     const handler = this.refreshTokenRoute?.getHandler()
+                    if (handler) {
+                        return handler(params, req, res, next)
+                    } else {
+                        return res.status(400).json(new OAuth2UnauthorizedClientResponse())
+                    }
+                } else if (
+                    hasClientId &&
+                    hasRefreshToken
+                ) {
+                    const params: OAuth2RefreshTokenUnsafeParams = {
+                        clientId: req.body.client_id,
+                        grantType: req.body.grant_type,
+                        refreshToken: req.body.refresh_token
+                    }
+
+                    if (req.body.scope && typeof req.body.scope === 'string') {
+                        params.scope = req.body.scope
+                    }
+
+                    const handler = this.refreshTokenRoute?.getUnsafeHandler?.()
                     if (handler) {
                         return handler(params, req, res, next)
                     } else {
@@ -433,11 +467,15 @@ export class OAuth2ACShape extends OAuth2Shape {
                 }
             }, (req, res, next) => {
                 // validating body
+                const hasClientId = req.body.client_id && typeof req.body.client_id === 'string'
+                const hasClientSecret = req.body.client_secret && typeof req.body.client_secret === 'string'
+                const hasRefreshToken = req.body.refresh_token && typeof req.body.refresh_token === 'string'
+                const isRefreshTokenGrantType = req.body.grant_type === 'refresh_token'
                 if (
-                    req.body.client_id && typeof req.body.client_id === 'string' &&
-                    req.body.client_secret && typeof req.body.client_secret === 'string' &&
-                    req.body.refresh_token && typeof req.body.refresh_token === 'string' &&
-                    req.body.grant_type === 'refresh_token'
+                    hasClientId &&
+                    hasClientSecret &&
+                    hasRefreshToken &&
+                    isRefreshTokenGrantType
                 ) {
                     const params: OAuth2RefreshTokenParams = {
                         clientId: req.body.client_id,
@@ -451,6 +489,27 @@ export class OAuth2ACShape extends OAuth2Shape {
                     }
 
                     const handler = this.refreshTokenRoute?.getHandler()
+                    if (handler) {
+                        return handler(params, req, res, next)
+                    } else {
+                        return res.status(400).json(new OAuth2UnauthorizedClientResponse())
+                    }
+                } else if (
+                    hasClientId &&
+                    hasRefreshToken &&
+                    isRefreshTokenGrantType
+                ) {
+                    const params: OAuth2RefreshTokenUnsafeParams = {
+                        clientId: req.body.client_id,
+                        grantType: req.body.grant_type,
+                        refreshToken: req.body.refresh_token
+                    }
+
+                    if (req.body.scope && typeof req.body.scope === 'string') {
+                        params.scope = req.body.scope
+                    }
+
+                    const handler = this.refreshTokenRoute?.getUnsafeHandler?.()
                     if (handler) {
                         return handler(params, req, res, next)
                     } else {
