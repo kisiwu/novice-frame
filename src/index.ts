@@ -123,11 +123,6 @@ export class Frame extends FrameworkApp {
 
         super(config)
 
-        this.docs = {
-            openapi: new OpenAPI(),
-            postman: new Postman()
-        }
-
         let docsConfig: DocsConfig | undefined
         if (config?.docs) {
             if ('docs' in config.docs) {
@@ -135,6 +130,11 @@ export class Frame extends FrameworkApp {
             } else {
                 docsConfig = config?.docs
             }
+        }
+
+        this.docs = {
+            openapi: new OpenAPI(docsConfig?.openAPIHelper),
+            postman: new Postman(docsConfig?.postmanHelper)
         }
         
         if (docsConfig?.disabled) {

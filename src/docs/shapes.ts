@@ -13,6 +13,7 @@ import { BaseResponseUtil } from '@novice1/api-doc-generator/lib/utils/responses
 import { ExampleShape } from './classes/ExampleShape'
 import { SchemaShape } from './classes/SchemaShape'
 import { SwaggerUiOptions } from 'swagger-ui-express'
+import { OpenAPIHelperInterface, PostmanHelperInterface } from '@novice1/api-doc-generator'
 
 export * from './classes/ExampleShape'
 export * from './classes/MediaTypeShape'
@@ -57,6 +58,9 @@ export interface DocsConfig {
     responses?: BaseResponseUtil
     tags?: DocsTag[]
     options?: DocsOptions
+
+    openAPIHelper?: { new(args: unknown): OpenAPIHelperInterface }
+    postmanHelper?: { new(args: unknown): PostmanHelperInterface }
 }
 
 export interface IDocsShape {
@@ -80,6 +84,9 @@ export class DocsShape implements IDocsShape {
     #examples?: Record<string, ReferenceObject | ExampleObject>
     #schemas?: Record<string, ReferenceObject | SchemaObject>
     #responses?: BaseResponseUtil
+
+    #openAPIHelper?: { new(args: unknown): OpenAPIHelperInterface }
+    #postmanHelper?: { new(args: unknown): PostmanHelperInterface } 
 
     private _convertExampleShapes(examples: Iterable<ExampleShape>): Record<string, ReferenceObject | ExampleObject> {
         const values: Record<string, ReferenceObject | ExampleObject> = {}
@@ -223,6 +230,16 @@ export class DocsShape implements IDocsShape {
         return this
     }
 
+    setOpenAPIHelper(helper: { new(args: unknown): OpenAPIHelperInterface }): this {
+        this.#openAPIHelper = helper
+        return this
+    }
+
+    setPostmanHelper(helper: { new(args: unknown): PostmanHelperInterface }): this {
+        this.#postmanHelper = helper
+        return this
+    }
+
     docs(): DocsConfig {
         return {
             disabled: this.#disabled,
@@ -242,7 +259,10 @@ export class DocsShape implements IDocsShape {
 
             examples: this.#examples,
             schemas: this.#schemas,
-            responses: this.#responses
+            responses: this.#responses,
+
+            openAPIHelper: this.#openAPIHelper,
+            postmanHelper: this.#postmanHelper
         }
     }
 }
