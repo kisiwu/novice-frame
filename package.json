@@ -1,6 +1,6 @@
 {
   "name": "@novice1/frame",
-  "version": "0.1.16",
+  "version": "0.2.0",
   "description": "Web framework for building APIs.",
   "main": "lib/index.js",
   "repository": {
@@ -24,14 +24,14 @@
   "author": "demingongo",
   "license": "MIT",
   "dependencies": {
-    "@novice1/api-doc-generator": "^0.2.8",
-    "@novice1/app": "^0.3.5",
-    "@novice1/routing": "^1.1.7",
-    "@novice1/validator-joi": "^0.1.6",
-    "@types/express": "^5.0.0",
+    "@novice1/api-doc-generator": "^0.3.0",
+    "@novice1/app": "^0.9.0",
+    "@novice1/routing": "^2.0.0",
+    "@novice1/validator-joi": "^0.9.4",
+    "@types/express": "^5.0.1",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
-    "express": "^4.21.2",
+    "express": "^5.1.0",
     "extend": "^3.0.2",
     "joi": "^17.13.3",
     "swagger-ui-express": "^5.0.1",
@@ -42,14 +42,14 @@
     "@types/cookie-parser": "^1.4.8",
     "@types/cors": "^2.8.17",
     "@types/extend": "^3.0.4",
-    "@types/node": "^22.10.10",
-    "@types/swagger-ui-express": "^4.1.7",
+    "@types/node": "^22.15.2",
+    "@types/swagger-ui-express": "^4.1.8",
     "@types/yamljs": "^0.2.34",
-    "@typescript-eslint/eslint-plugin": "^8.21.0",
-    "@typescript-eslint/parser": "^8.21.0",
+    "@typescript-eslint/eslint-plugin": "^8.31.0",
+    "@typescript-eslint/parser": "^8.31.0",
     "eslint": "^8.57.0",
     "ts-node": "^10.9.2",
-    "typedoc": "^0.27.6",
-    "typescript": "^5.7.3"
+    "typedoc": "^0.28.3",
+    "typescript": "^5.8.3"
   }
 }

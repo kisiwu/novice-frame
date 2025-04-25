@@ -59,7 +59,7 @@ export class SchemaShape implements ISchemaShape {
     }
 
     private _convertOneShape(v: SchemaObject | ReferenceObject | ISchemaShape): SchemaObject | ReferenceObject {
-        return typeof v.ref == 'function' ? v.ref() : v
+        return typeof v.ref == 'function' ? v.ref() : {...v}
     }
 
     private _convertManyShapes(v: Array<SchemaObject | ReferenceObject | ISchemaShape>): Array<SchemaObject | ReferenceObject> {
