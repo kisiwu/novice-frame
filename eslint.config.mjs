@@ -61,7 +61,6 @@ export default defineConfig([
         },
 
         rules: {
-            'mocha/no-setup-in-describe': ['off'],
             '@stylistic/js/quotes': ['warn', 'single'],
             '@stylistic/js/quote-props': ['error', 'as-needed'],
         },
