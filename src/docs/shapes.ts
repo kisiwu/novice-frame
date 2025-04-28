@@ -230,12 +230,12 @@ export class DocsShape implements IDocsShape {
         return this
     }
 
-    setOpenAPIHelper(options: OpenAPIOptions): this {
+    setOpenAPIOptions(options: OpenAPIOptions): this {
         this.#openAPIOptions = options
         return this
     }
 
-    setPostmanHelper(options: PostmanOptions): this {
+    setPostmanOptions(options: PostmanOptions): this {
         this.#postmanOptions = options
         return this
     }
