@@ -133,8 +133,8 @@ export class Frame extends FrameworkApp {
         }
 
         this.docs = {
-            openapi: new OpenAPI(docsConfig?.openAPIHelper),
-            postman: new Postman(docsConfig?.postmanHelper)
+            openapi: new OpenAPI(docsConfig?.openAPIOptions),
+            postman: new Postman(docsConfig?.postmanOptions)
         }
         
         if (docsConfig?.disabled) {
