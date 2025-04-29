@@ -24,7 +24,7 @@
   "author": "demingongo",
   "license": "MIT",
   "dependencies": {
-    "@novice1/api-doc-generator": "next",
+    "@novice1/api-doc-generator": "^1.0.0",
     "@novice1/app": "^0.9.0",
     "@novice1/routing": "^2.0.0",
     "@novice1/validator-joi": "^0.9.5",
