@@ -4,6 +4,7 @@
     ],
     "out": "docs",
   
+    "excludeExternals": true,
     "excludeInternal": true,
     "excludePrivate": true,
     "includeVersion": true,
