@@ -19,6 +19,7 @@ export * from './responses'
 export * from './security'
 export * from './services/responseService'
 export * from './services/securityService'
+export * from './utils/routingUtils'
 
 export interface FrameworkOptions extends BaseFrameworkOptions {
     bodyParser?: {

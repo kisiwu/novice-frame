@@ -8,6 +8,8 @@ types
 todo
 .todo
 typedoc.json
+eslint.config.mjs
+tsconfig.json
 
 # Logs
 logs
