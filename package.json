@@ -1,6 +1,6 @@
 {
   "name": "@novice1/frame",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Web framework for building APIs.",
   "main": "lib/index.js",
   "repository": {
@@ -25,9 +25,9 @@
   "license": "MIT",
   "dependencies": {
     "@novice1/api-doc-generator": "^1.0.0",
-    "@novice1/app": "^0.9.1",
-    "@novice1/routing": "^2.0.0",
-    "@novice1/validator-joi": "^0.9.5",
+    "@novice1/app": "^0.9.2",
+    "@novice1/routing": "^2.0.1",
+    "@novice1/validator-joi": "^0.9.6",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "express": "^5.1.0",
