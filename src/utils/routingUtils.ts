@@ -39,6 +39,12 @@ export function controller<P = core.ParamsDictionary,
                 return
             }
 
+            // if buffer
+            if (value instanceof Buffer) {
+                // simply send the content
+                return res.send(value)
+            }
+
             // if no 'Content-Type' header
             if (!res.hasHeader('Content-Type')) {
                 // there is no 'Content-Type' header, we have to guess how to return the content
