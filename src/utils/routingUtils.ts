@@ -14,7 +14,7 @@ export interface Controller<
         req: routing.Request<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>,
         res: core.Response<ResBody, Locals>,
         next: core.NextFunction,
-    ): ResBody | Promise<ResBody> | void;
+    ): ResBody | void | Promise<ResBody> | Promise<void>;
 }
 
 export function controller<P = core.ParamsDictionary,
