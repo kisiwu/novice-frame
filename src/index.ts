@@ -109,7 +109,7 @@ export class Frame extends FrameworkApp {
         if (config.framework.cors) {
             config.routers.unshift(
                 routing().options({
-                    path: '*',
+                    path: '*splat',
                     parameters: {
                         undoc: true
                     }
