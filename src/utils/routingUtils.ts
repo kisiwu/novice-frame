@@ -3,6 +3,8 @@ import * as core from 'express-serve-static-core';
 import Stream, { Readable } from 'stream';
 import { ParsedQs } from 'qs'
 
+//#region controller
+
 export interface Controller<
     P = core.ParamsDictionary,
     ResBody = unknown,
@@ -62,3 +64,30 @@ export function controller<P = core.ParamsDictionary,
         return
     }
 }
+
+//#endregion controller
+
+//#region controllerV2
+
+export type ReqRefDefaults = {
+    body: unknown
+    params: core.ParamsDictionary
+    query: ParsedQs
+    resBody: unknown
+}
+
+export type ReqRef = Partial<Record<keyof ReqRefDefaults, unknown>>;
+
+export function controllerV2<
+    Refs extends ReqRef = ReqRefDefaults, Locals extends Record<string, unknown> = Record<string, unknown>, MetaResType = unknown>(handler: Controller<
+        Refs['params'],
+        Refs['resBody'],
+        Refs['body'],
+        Refs['query'],
+        Locals,
+        MetaResType
+    >): routing.RequestHandler<Refs['params'], Refs['resBody'], Refs['body'], Refs['query'], Locals, MetaResType> {
+    return controller(handler)
+}
+
+//#endregion controllerV2
