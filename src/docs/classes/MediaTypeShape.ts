@@ -43,7 +43,7 @@ export class MediaTypeShape extends MediaTypeUtil {
     }
 
     setSchema(schema: ReferenceObject | SchemaObject | SchemaShape, noRef?: boolean): this {
-        const value: ReferenceObject | SchemaObject = typeof schema.ref == 'function' && typeof schema.toObject == 'function' ?
+        const value: ReferenceObject | SchemaObject = schema instanceof SchemaShape ?
             noRef ? schema.toObject() : schema.ref() : schema;
         super.setSchema(value)
         return this

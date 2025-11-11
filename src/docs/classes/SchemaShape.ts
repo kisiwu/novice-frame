@@ -1,7 +1,10 @@
-import { ReferenceObject, SchemaObject } from '@novice1/api-doc-generator/lib/generators/openapi/definitions';
+import { ReferenceObject, SchemaObject, SchemaObject3_0, SchemaObject3_1 } from '@novice1/api-doc-generator/lib/generators/openapi/definitions';
 import extend from 'extend';
 
 type SchemaProp<T extends keyof SchemaObject> = Pick<SchemaObject, T>
+
+type Schema3_0Prop<T extends keyof SchemaObject3_0> = Pick<SchemaObject3_0, T>
+type Schema3_1Prop<T extends keyof SchemaObject3_1> = Pick<SchemaObject3_1, T>
 
 export interface ISchemaShape {
     ref(): ReferenceObject
@@ -31,13 +34,14 @@ export interface SchemaShapeObject extends
     SchemaProp<'minimum'>,
     SchemaProp<'exclusiveMaximum'>,
     SchemaProp<'exclusiveMinimum'>,
-    SchemaProp<'nullable'>,
+    Schema3_0Prop<'nullable'>,
     SchemaProp<'discriminator'>,
     SchemaProp<'readOnly'>,
     SchemaProp<'writeOnly'>,
     SchemaProp<'xml'>,
     SchemaProp<'externalDocs'>,
-    SchemaProp<'example'>,
+    Schema3_0Prop<'example'>,
+    Schema3_1Prop<'examples'>,
     SchemaProp<'deprecated'> {
     allOf?: Array<SchemaObject | ReferenceObject | ISchemaShape>;
     anyOf?: Array<SchemaObject | ReferenceObject | ISchemaShape>;
@@ -59,7 +63,7 @@ export class SchemaShape implements ISchemaShape {
     }
 
     private _convertOneShape(v: SchemaObject | ReferenceObject | ISchemaShape): SchemaObject | ReferenceObject {
-        return typeof v.ref == 'function' ? v.ref() : {...v}
+        return 'ref' in v && typeof v.ref == 'function' ? v.ref() : {...(v as SchemaObject | ReferenceObject)}
     }
 
     private _convertManyShapes(v: Array<SchemaObject | ReferenceObject | ISchemaShape>): Array<SchemaObject | ReferenceObject> {
