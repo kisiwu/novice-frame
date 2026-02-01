@@ -5,6 +5,9 @@ import { ParsedQs } from 'qs'
 
 //#region controller
 
+/**
+ * Controller function type
+ */
 export interface Controller<
     P = core.ParamsDictionary,
     ResBody = unknown,
@@ -20,6 +23,11 @@ export interface Controller<
     ): ResBody | void | core.Response<ResBody, Locals> | Promise<ResBody> | Promise<void> | Promise<core.Response<ResBody, Locals>>;
 }
 
+/**
+ * Wrap a controller function into an express request handler
+ * @param handler 
+ * @returns 
+ */
 export function controller<P = core.ParamsDictionary,
     ResBody = unknown,
     ReqBody = unknown,
@@ -78,6 +86,11 @@ export type ReqRefDefaults = {
 
 export type ReqRef = Partial<Record<keyof ReqRefDefaults, unknown>>;
 
+/**
+ * Wrap a controller function into an express request handler
+ * @param handler 
+ * @returns 
+ */
 export function controllerV2<
     Refs extends ReqRef = ReqRefDefaults, Locals extends Record<string, unknown> = Record<string, unknown>, MetaResType = unknown>(handler: Controller<
         Refs['params'],

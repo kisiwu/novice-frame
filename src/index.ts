@@ -21,6 +21,9 @@ export * from './services/responseService'
 export * from './services/securityService'
 export * from './utils/routingUtils'
 
+/**
+ * Framework options interface
+ */
 export interface FrameworkOptions extends BaseFrameworkOptions {
     bodyParser?: {
         json?: bodyParser.OptionsJson
@@ -38,12 +41,18 @@ export interface FrameworkOptions extends BaseFrameworkOptions {
     validatorOnError?: routing.ErrorRequestHandler
 }
 
+/**
+ * Frame options interface
+ */
 export interface FrameOptions extends Options {
     docs?: DocsConfig | IDocsShape
     framework?: FrameworkOptions
     security?: ISecurityShape
 }
 
+/**
+ * Main Frame class
+ */
 export class Frame extends FrameworkApp {
 
     #docsDisabled: boolean = false
@@ -52,12 +61,21 @@ export class Frame extends FrameworkApp {
 
     #docsOptions: DocsOptions = {}
 
+    /**
+     * Documentation instances
+     */
     protected docs: { openapi: OpenAPI, postman: Postman }
 
+    /**
+     * Get the OpenAPI documentation instance
+     */
     get openapi() {
         return this.docs.openapi
     }
 
+    /**
+     * Get the Postman documentation instance
+     */
     get postman() {
         return this.docs.postman
     }
@@ -258,8 +276,7 @@ export class Frame extends FrameworkApp {
     }
 
     /**
-     * @TODO fix refresh for postman
-     * (problem: it adds the same routes multiple time)
+     * Remove all routes related to docs and re-add them
      */
     refreshDocs() {
         this.docs.openapi.removeAll();
@@ -268,6 +285,9 @@ export class Frame extends FrameworkApp {
         this.docs.postman.add(this.meta);
     }
 
+    /**
+     * Build the HTTP server and refresh the docs before returning it
+     */
     build<T extends http.ServerOptions = http.ServerOptions>(options?: T | null, mod?: {
         createServer(requestListener?: http.RequestListener): http.Server;
         createServer(options: T, requestListener?: http.RequestListener | undefined): http.Server;
