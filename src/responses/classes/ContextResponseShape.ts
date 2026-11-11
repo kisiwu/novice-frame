@@ -1,6 +1,10 @@
 import { ResponseShape } from './ResponseShape';
-import { ContextResponseUtil, IOpenAPIResponseContext } from '@novice1/api-doc-generator';
-import { ResponseObject, ReferenceObject } from '@novice1/api-doc-generator/lib/generators/openapi/definitions';
+import {
+  ContextResponseUtil,
+  IOpenAPIResponseContext,
+  OpenAPIResponseObject as ResponseObject,
+  ReferenceObject,
+} from '@novice1/api-doc-generator';
 
 export class ContextResponseShape extends ContextResponseUtil {
   toOpenAPI(): Record<string, ResponseObject | ReferenceObject> {

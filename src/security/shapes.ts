@@ -1,7 +1,7 @@
 /**
  * security/shapes
  */
-import { BaseAuthUtil } from '@novice1/api-doc-generator/lib/utils/auth/baseAuthUtils';
+import { BaseAuthUtil } from '@novice1/api-doc-generator';
 import { IRouter, RequestHandler } from '@novice1/routing';
 
 export interface ISecurityShape {

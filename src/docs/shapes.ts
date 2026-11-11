@@ -1,18 +1,19 @@
 import { ExampleShape } from './classes/ExampleShape';
 import { SchemaShape } from './classes/SchemaShape';
-import { OpenAPIOptions, PostmanOptions } from '@novice1/api-doc-generator';
 import {
+  OpenAPIOptions,
+  PostmanOptions,
+  BaseAuthUtil,
+  BaseResponseUtil,
   ExampleObject,
+  Folder,
   LicenseObject,
   ReferenceObject,
   SchemaObject,
   ServerObject,
   ServerVariableObject,
   TagObject,
-} from '@novice1/api-doc-generator/lib/generators/openapi/definitions';
-import { Folder } from '@novice1/api-doc-generator/lib/generators/postman/definitions';
-import { BaseAuthUtil } from '@novice1/api-doc-generator/lib/utils/auth/baseAuthUtils';
-import { BaseResponseUtil } from '@novice1/api-doc-generator/lib/utils/responses/baseResponseUtils';
+} from '@novice1/api-doc-generator';
 import { SwaggerUiOptions } from 'swagger-ui-express';
 
 export * from './classes/ExampleShape';

@@ -12,8 +12,7 @@ import {
   OAuth2RefreshTokenParams,
   OAuth2RefreshTokenRoute,
 } from './route';
-import { ClientAuthentication, GrantType, OAuth2Util } from '@novice1/api-doc-generator';
-import { BaseAuthUtil } from '@novice1/api-doc-generator/lib/utils/auth/baseAuthUtils';
+import { BaseAuthUtil, ClientAuthentication, GrantType, OAuth2Util } from '@novice1/api-doc-generator';
 import routing, { IRouter } from '@novice1/routing';
 import * as core from 'express-serve-static-core';
 import { ParsedQs } from 'qs';

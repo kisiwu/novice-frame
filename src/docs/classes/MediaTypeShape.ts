@@ -1,12 +1,12 @@
 import { ExampleShape } from './ExampleShape';
 import { SchemaShape } from './SchemaShape';
-import { MediaTypeUtil } from '@novice1/api-doc-generator';
 import {
   ExampleObject,
   MediaTypeObject,
+  MediaTypeUtil,
   ReferenceObject,
   SchemaObject,
-} from '@novice1/api-doc-generator/lib/generators/openapi/definitions';
+} from '@novice1/api-doc-generator';
 
 export interface MediaTypeShapeConfig extends Omit<Omit<MediaTypeObject, 'examples'>, 'schema'> {
   examples?: Record<string, ExampleObject | ReferenceObject | ExampleShape>;

@@ -4,7 +4,6 @@ import { ISecurityShape } from './security';
 import { OAuth2Util, OpenAPI, Postman } from '@novice1/api-doc-generator';
 import { FrameworkApp, FrameworkOptions as BaseFrameworkOptions, Options } from '@novice1/app';
 import routing from '@novice1/routing';
-import validatorJoi from '@novice1/validator-joi';
 import * as bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
@@ -108,13 +107,7 @@ export class Frame extends FrameworkApp {
     // add default validator if none was specified
     if (!config.framework.validators?.length) {
       config.framework.validators = config.framework.validators || [];
-      const onerror: routing.ErrorRequestHandler =
-        typeof config.framework.validatorOnError == 'function'
-          ? config.framework.validatorOnError
-          : (err, _req, res) => {
-              return res.status(400).json(err);
-            };
-      config.framework.validators.push(validatorJoi({ stripUnknown: true }, onerror));
+      // No more default validators, avoiding extra dependencies
     }
 
     // add default routers

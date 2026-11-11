@@ -1,7 +1,10 @@
 import { ResponseShape } from './ResponseShape';
-import { GroupResponseUtil } from '@novice1/api-doc-generator';
-import { ResponseObject, ReferenceObject } from '@novice1/api-doc-generator/lib/generators/openapi/definitions';
-import { BaseResponseUtil } from '@novice1/api-doc-generator/lib/utils/responses/all';
+import {
+  BaseResponseUtil,
+  GroupResponseUtil,
+  OpenAPIResponseObject as ResponseObject,
+  ReferenceObject,
+} from '@novice1/api-doc-generator';
 import extend from 'extend';
 
 export class GroupResponseShape extends GroupResponseUtil {

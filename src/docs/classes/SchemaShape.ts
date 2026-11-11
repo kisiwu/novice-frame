@@ -1,9 +1,4 @@
-import {
-  ReferenceObject,
-  SchemaObject,
-  SchemaObject3_0,
-  SchemaObject3_1,
-} from '@novice1/api-doc-generator/lib/generators/openapi/definitions';
+import { ReferenceObject, SchemaObject, SchemaObject3_0, SchemaObject3_1 } from '@novice1/api-doc-generator';
 import extend from 'extend';
 
 type SchemaProp<T extends keyof SchemaObject> = Pick<SchemaObject, T>;

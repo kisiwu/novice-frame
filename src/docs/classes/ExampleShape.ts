@@ -1,4 +1,4 @@
-import { ExampleObject, ReferenceObject } from '@novice1/api-doc-generator/lib/generators/openapi/definitions';
+import { ExampleObject, ReferenceObject } from '@novice1/api-doc-generator';
 
 export class ExampleShape {
   protected name: string;
