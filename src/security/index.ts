@@ -1,2 +1,2 @@
-export * from './shapes'
-export * from './oauth2'
+export * from './shapes';
+export * from './oauth2';

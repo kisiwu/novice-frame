@@ -1,67 +1,67 @@
-import { defineConfig } from 'eslint/config';
+import { FlatCompat } from '@eslint/eslintrc';
+import js from '@eslint/js';
+import stylisticJs from '@stylistic/eslint-plugin';
 import typescriptEslint from '@typescript-eslint/eslint-plugin';
-import globals from 'globals';
 import tsParser from '@typescript-eslint/parser';
+import { defineConfig } from 'eslint/config';
+import globals from 'globals';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import js from '@eslint/js';
-import { FlatCompat } from '@eslint/eslintrc';
-import stylisticJs from '@stylistic/eslint-plugin'
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const compat = new FlatCompat({
-    baseDirectory: __dirname,
-    recommendedConfig: js.configs.recommended,
-    allConfig: js.configs.all
+  baseDirectory: __dirname,
+  recommendedConfig: js.configs.recommended,
+  allConfig: js.configs.all,
 });
 
 export default defineConfig([
-    { ignores: ['lib/'] },
-    {
-        extends: compat.extends('eslint:recommended', 'plugin:@typescript-eslint/recommended'),
-        files: ['src/**/*.ts', '*.{ts,mjs}'],
+  { ignores: ['lib/'] },
+  {
+    extends: compat.extends('eslint:recommended', 'plugin:@typescript-eslint/recommended'),
+    files: ['src/**/*.ts', '*.{ts,mjs,mts}'],
 
-        plugins: {
-            '@typescript-eslint': typescriptEslint,
-            '@stylistic/js': stylisticJs
-        },
-
-        languageOptions: {
-            globals: {
-                ...globals.node,
-            },
-
-            parser: tsParser,
-            ecmaVersion: 6,
-            sourceType: 'module',
-        },
-
-        rules: {
-            '@stylistic/js/quotes': ['warn', 'single'],
-            '@stylistic/js/quote-props': ['error', 'as-needed'],
-        },
+    plugins: {
+      '@typescript-eslint': typescriptEslint,
+      '@stylistic/js': stylisticJs,
     },
-    {
-        extends: [...compat.extends('eslint:recommended')],
-        files: ['*.js'],
 
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
 
-        plugins: {
-            '@stylistic/js': stylisticJs
-        },
+      parser: tsParser,
+      ecmaVersion: 6,
+      sourceType: 'module',
+    },
 
-        languageOptions: {
-            globals: {
-                ...globals.node,
-            },
+    rules: {
+      '@stylistic/js/quotes': ['warn', 'single', { avoidEscape: true }],
+      '@stylistic/js/quote-props': ['error', 'as-needed'],
+    },
+  },
+  {
+    extends: [...compat.extends('eslint:recommended')],
+    files: ['*.js'],
 
-            ecmaVersion: 8,
-            sourceType: 'commonjs',
-        },
+    plugins: {
+      '@stylistic/js': stylisticJs,
+    },
 
-        rules: {
-            '@stylistic/js/quotes': ['warn', 'single'],
-            '@stylistic/js/quote-props': ['error', 'as-needed'],
-        },
-    }]);
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
+
+      ecmaVersion: 8,
+      sourceType: 'commonjs',
+    },
+
+    rules: {
+      '@stylistic/js/quotes': ['warn', 'single'],
+      '@stylistic/js/quote-props': ['error', 'as-needed'],
+    },
+  },
+]);
