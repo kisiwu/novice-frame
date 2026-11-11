@@ -40,6 +40,12 @@ export default defineConfig([
     rules: {
       '@stylistic/js/quotes': ['warn', 'single', { avoidEscape: true }],
       '@stylistic/js/quote-props': ['error', 'as-needed'],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          ignoreRestSiblings: '^_',
+        }
+      ]
     },
   },
   {

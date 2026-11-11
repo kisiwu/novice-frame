@@ -1,4 +1,5 @@
 import routing from '@novice1/routing';
+// import type { StandardSchemaV1 } from '@standard-schema/spec';
 import * as core from 'express-serve-static-core';
 import { ParsedQs } from 'qs';
 import Stream, { Readable } from 'stream';
@@ -110,3 +111,55 @@ export function controllerV2<
 }
 
 //#endregion controllerV2
+
+//#region controllerV3
+
+/*
+export type ReqSchema<
+  B extends StandardSchemaV1 | undefined,
+  P extends StandardSchemaV1 | undefined,
+  Q extends StandardSchemaV1 | undefined,
+> = {
+  body?: B;
+  params?: P;
+  query?: Q;
+};
+
+async function validateSchema<TSchema extends StandardSchemaV1>(
+  schema: TSchema,
+  value: unknown,
+  options?: StandardSchemaV1.Options | undefined
+): Promise<StandardSchemaV1.Result<unknown>> {
+  return await schema['~standard'].validate(value, options);
+}
+
+// StandardSchemaV1.InferOutput<TSchema>
+
+export function controllerV3<
+  BodySchema extends StandardSchemaV1 | undefined = undefined,
+  ParamsSchema extends StandardSchemaV1 | undefined = undefined,
+  QuerySchema extends StandardSchemaV1 | undefined = undefined,
+  Locals extends Record<string, unknown> = Record<string, unknown>,
+  MetaResType = unknown,
+>(
+  schema: ReqSchema<BodySchema, ParamsSchema, QuerySchema>,
+  handler: Controller<
+    ParamsSchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<ParamsSchema> : core.ParamsDictionary,
+    MetaResType,
+    BodySchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<BodySchema> : unknown,
+    QuerySchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<QuerySchema> : ParsedQs,
+    Locals,
+    MetaResType
+  >
+): routing.RequestHandler<
+  ParamsSchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<ParamsSchema> : core.ParamsDictionary,
+  MetaResType,
+  BodySchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<BodySchema> : unknown,
+  QuerySchema extends StandardSchemaV1 ? StandardSchemaV1.InferOutput<QuerySchema> : ParsedQs,
+  Locals,
+  MetaResType
+> {
+  return controller(handler);
+}
+*/
+//#endregion controllerV3
