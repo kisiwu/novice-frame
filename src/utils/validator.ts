@@ -1,9 +1,11 @@
-import { ErrorRequestHandler, RequestHandler, Request } from '@novice1/routing';
+import { Controller } from './routingUtils';
+import routing from '@novice1/routing';
+import type { ErrorRequestHandler, RequestHandler, Request, RouteSettings, MetaParameters } from '@novice1/routing';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { ParamsDictionary } from 'express-serve-static-core';
 import Extend from 'extend';
 import { IncomingHttpHeaders } from 'node:http';
-import { ParsedQs } from 'qs';
+import QueryString, { ParsedQs } from 'qs';
 
 const PARAMETERS_PROPS = ['params', 'body', 'query', 'headers', 'cookies', 'files'];
 
@@ -201,3 +203,50 @@ export function validatorSchema(
     }
   };
 }
+
+//#region route
+
+export interface ValidatorConfig {
+  options?: StandardSchemaV1.Options | undefined;
+  onerror?: ErrorRequestHandler | undefined;
+}
+
+export type RouteSettingWithSchema<
+  Route extends string,
+  ResBody = any,
+  Locals extends Record<string, any> = Record<string, any>,
+  MetaResType = any,
+> = {
+  parameters: MetaParameters & { standardSchema: StandardValidatorSchema };
+} & RouteSettings<Route, {}, ResBody, any, QueryString.ParsedQs, Locals, MetaResType>;
+
+export function withSchema<
+  Route extends string,
+  ResBody = any,
+  Locals extends Record<string, any> = Record<string, any>,
+  MetaResType = any,
+  Settings extends RouteSettingWithSchema<Route, ResBody, Locals, MetaResType> = RouteSettingWithSchema<
+    Route,
+    ResBody,
+    Locals,
+    MetaResType
+  >,
+>(
+  method: 'all' | 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head',
+  config: Settings,
+  ...handlers: Controller<
+    Settings['parameters']['standardSchema']['params'],
+    ResBody,
+    Settings['parameters']['standardSchema']['body'],
+    QueryString.ParsedQs,
+    Locals,
+    MetaResType
+  >[]
+) {
+  const router = routing({});
+  router.route(config).get();
+  router.route(config)[method](...handlers);
+  return router;
+}
+
+//#endregion route
