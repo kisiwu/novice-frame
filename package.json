@@ -26,7 +26,7 @@
     "format": "cross-env NODE_OPTIONS=--experimental-strip-types prettier --write .",
     "format:check": "cross-env NODE_OPTIONS=--experimental-strip-types prettier --check .",
     "lint": "eslint .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --import tsx --test test/**/*.test.ts"
   },
   "keywords": [
     "api",
@@ -49,6 +49,7 @@
     "@types/express": "^5.0.6",
     "@types/extend": "^3.0.4",
     "@types/node": "^26.6.6",
+    "@types/supertest": "^7.2.1",
     "@types/swagger-ui-express": "^4.1.8",
     "@types/yamljs": "^0.2.34",
     "@typescript-eslint/eslint-plugin": "^8.72.2",
@@ -60,6 +61,8 @@
     "eslint-import-resolver-typescript": "^4.4.5",
     "eslint-plugin-import-x": "^4.17.1",
     "prettier": "^3.10.0",
+    "supertest": "^7.3.2",
+    "tsx": "^4.23.15",
     "typedoc": "^0.28.20",
     "typescript": "npm:@typescript/typescript6@^6.0.0",
     "typescript-eslint": "^8.72.2",

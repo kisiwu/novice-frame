@@ -18,7 +18,7 @@ export function validatorSchema(
   onerror?: ErrorRequestHandler | undefined,
   schemaProperty?: string | undefined
 ): RequestHandler {
-  return async function (req, res, next) {
+  return async function standardValidator(req, res, next) {
     try {
       const schema = retrieveSchema(req.meta?.parameters, schemaProperty);
       if (!schema) {
@@ -51,7 +51,8 @@ export function validatorSchema(
       const fullResult: { value: Record<string, unknown> } = {
         value: {},
       };
-      for (const key of Object.keys(schema).sort(compareOrder)) {
+      const ordered = Object.keys(schema).sort(compareOrder);
+      for (const key of ordered) {
         const result = await validate(
           (schema as Record<string, StandardSchemaV1>)[key],
           (values as Record<string, unknown>)[key],

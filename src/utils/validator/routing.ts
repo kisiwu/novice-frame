@@ -1,3 +1,4 @@
+import { controller } from '../routingUtils';
 import type {
   HttpMethod,
   SchemaRouteSettings,
@@ -7,7 +8,7 @@ import type {
   RouterWithSchema,
 } from './types';
 import { validatorSchema } from './validator';
-import type { IRouter, IRoute, RequestHandler } from '@novice1/routing';
+import type { IRouter, RequestHandler } from '@novice1/routing';
 import type * as core from 'express-serve-static-core';
 
 export function withSchema<
@@ -22,7 +23,7 @@ export function withSchema<
   method: HttpMethod,
   settings: Settings,
   ...handlers: SchemaHandlers<Settings, ResBody, Locals, MetaResType>
-): IRoute<Path, MetaResType>;
+): IRouter;
 export function withSchema<
   ResBody = unknown,
   Locals extends Record<string, unknown> = Record<string, unknown>,
@@ -34,7 +35,7 @@ export function withSchema<
   method: HttpMethod,
   settings: Settings,
   ...handlers: SchemaHandlers<Settings, ResBody, Locals, MetaResType>
-): IRoute;
+): IRouter;
 export function withSchema<
   Path extends string,
   ResBody = unknown,
@@ -47,10 +48,10 @@ export function withSchema<
   method: HttpMethod,
   settings: Settings,
   ...handlers: SchemaHandlers<Settings, ResBody, Locals, MetaResType>
-): IRoute<Path, MetaResType> {
+): IRouter {
   router.setValidatorsIfNone(validatorSchema(undefined, undefined, 'standardSchema'));
-  const route = router.route(settings)[method](...(handlers as unknown as RequestHandler[]));
-  return route;
+  router[method](settings, ...(handlers as unknown as RequestHandler[]).map((h) => controller(h)));
+  return router;
 }
 
 //#region Factory
@@ -88,13 +89,14 @@ export function createWithSchema(router: IRouter): RouterWithSchema {
       ...handlers: unknown[]
     ) {
       const { schema, options, onerror, parameters, ...rest } = settings;
-      router.setValidatorsIfNone(validatorSchema(undefined, undefined, 'standardSchema'));
-      router
-        .route({
+      router.setValidators(validatorSchema(undefined, undefined, 'standardSchema'));
+      router[method](
+        {
           ...rest,
           parameters: { ...parameters, standardSchema: schema, standardValidatorOptions: options, onerror },
-        })
-        ?.[method](...(handlers as RequestHandler[]));
+        },
+        ...(handlers as RequestHandler[]).map((h) => controller(h))
+      );
       return wrapper;
     },
     with: () => ({ route: wrapper.route }),
