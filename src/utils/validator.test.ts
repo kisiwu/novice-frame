@@ -3,6 +3,10 @@ import routing from '@novice1/routing';
 import * as v from 'valibot';
 
 export function testValidator() {
+  // define the router
+  const myRouter = routing();
+
+  // define the body schema
   const bodySchema = v.object({
     artist: v.string(),
     title: v.string(),
@@ -11,8 +15,10 @@ export function testValidator() {
     songDurations: v.array(v.number()),
     outOfPublication: v.optional(v.boolean()),
   });
+
+  // register the route with the schema
   withSchema(
-    routing(),
+    myRouter,
     'post',
     {
       //path: '/no-params',
@@ -32,6 +38,9 @@ export function testValidator() {
       const artist = req.body.artist;
       const songDurations = req.body.songDurations;
       const outOfPublication = req.body.outOfPublication;
+    },
+    (req) => {
+      const body = req.validated().body;
     }
   );
 }

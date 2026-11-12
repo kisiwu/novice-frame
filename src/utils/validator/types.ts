@@ -3,7 +3,7 @@ import type { ErrorRequestHandler, RouteSettings, MetaParameters } from '@novice
 import type routing from '@novice1/routing';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type * as core from 'express-serve-static-core';
-import type QueryString from 'qs';
+import type { ParsedQs } from 'qs';
 
 export type StandardValidatorSchema = {
   body?: StandardSchemaV1 | undefined;
@@ -51,7 +51,7 @@ export type SchemaHandlers<
   Settings['parameters']['standardSchema']['body'] extends StandardSchemaV1
     ? StandardSchemaV1.InferOutput<Settings['parameters']['standardSchema']['body']>
     : unknown,
-  QueryString.ParsedQs,
+  ParsedQs,
   Locals,
   MetaResType,
   ValidatedData<Settings['parameters']['standardSchema']>
@@ -76,11 +76,11 @@ export type SchemaRouteSettings<
   ResBody = unknown,
   Locals extends Record<string, unknown> = Record<string, unknown>,
   MetaResType = unknown,
-> = WithStandardSchema & RouteSettings<Path, P, ResBody, unknown, QueryString.ParsedQs, Locals, MetaResType>;
+> = WithStandardSchema & RouteSettings<Path, P, ResBody, unknown, ParsedQs, Locals, MetaResType>;
 
 export type SchemaRouteSettingsAnyPath<
   P = core.ParamsDictionary,
   ResBody = unknown,
   Locals extends Record<string, unknown> = Record<string, unknown>,
   MetaResType = unknown,
-> = WithStandardSchema & RouteSettings<core.PathParams, P, ResBody, unknown, QueryString.ParsedQs, Locals, MetaResType>;
+> = WithStandardSchema & RouteSettings<core.PathParams, P, ResBody, unknown, ParsedQs, Locals, MetaResType>;

@@ -1,7 +1,7 @@
-import { StandardValidatorSchema } from './types';
+import type { StandardValidatorSchema } from './types';
 import type { Request } from '@novice1/routing';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import * as core from 'express-serve-static-core';
+import type * as core from 'express-serve-static-core';
 import type { IncomingHttpHeaders } from 'node:http';
 import type { ParsedQs } from 'qs';
 
