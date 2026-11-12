@@ -1,5 +1,4 @@
 import { Controller } from './routingUtils';
-import routing from '@novice1/routing';
 import type {
   ErrorRequestHandler,
   RequestHandler,
@@ -7,19 +6,19 @@ import type {
   RouteSettings,
   MetaParameters,
   IRouter,
+  IRoute,
 } from '@novice1/routing';
+// testing
+import routing from '@novice1/routing';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import { ParamsDictionary, RouteParameters } from 'express-serve-static-core';
+import { ParamsDictionary, PathParams, RouteParameters } from 'express-serve-static-core';
 import Extend from 'extend';
 import { IncomingHttpHeaders } from 'node:http';
 import QueryString, { ParsedQs } from 'qs';
-// testing
 import * as v from 'valibot';
 
 const PARAMETERS_PROPS = ['params', 'body', 'query', 'headers', 'cookies', 'files'];
-
 const orderMap = new Map(PARAMETERS_PROPS.map((item, index) => [item, index]));
-
 function compareOrder(a: string, b: string): number {
   return (orderMap.get(a) ?? 0) - (orderMap.get(b) ?? 0);
 }
@@ -213,30 +212,44 @@ export function validatorSchema(
   };
 }
 
-//#region route
+//#region route with standard schema
 
 export interface ValidatorConfig {
   options?: StandardSchemaV1.Options | undefined;
   onerror?: ErrorRequestHandler | undefined;
 }
 
-export type RouteSettingWithSchema<
+export interface WithStandardSchema {
+  parameters: MetaParameters & { standardSchema: StandardValidatorSchema };
+}
+
+export type SchemaRouteSettings<
   Path extends string,
   P = RouteParameters<Path>,
-  ResBody = any,
-  Locals extends Record<string, any> = Record<string, any>,
-  MetaResType = any,
-> = {
-  parameters: MetaParameters & { standardSchema: StandardValidatorSchema };
-} & RouteSettings<Path, P, ResBody, any, QueryString.ParsedQs, Locals, MetaResType>;
+  ResBody = unknown,
+  Locals extends Record<string, unknown> = Record<string, unknown>,
+  MetaResType = unknown,
+> = WithStandardSchema & RouteSettings<Path, P, ResBody, unknown, QueryString.ParsedQs, Locals, MetaResType>;
+
+export type SchemaRouteSettingsAnyPath<
+  P = ParamsDictionary,
+  ResBody = unknown,
+  Locals extends Record<string, unknown> = Record<string, unknown>,
+  MetaResType = unknown,
+> = WithStandardSchema & RouteSettings<PathParams, P, ResBody, unknown, QueryString.ParsedQs, Locals, MetaResType>;
 
 export function withSchema<
   Path extends string,
-  ResBody = any,
-  Locals extends Record<string, any> = Record<string, any>,
-  MetaResType = any,
-  Settings extends RouteSettingWithSchema<Path, RouteParameters<Path>, ResBody, Locals, MetaResType> =
-    RouteSettingWithSchema<Path, RouteParameters<Path>, ResBody, Locals, MetaResType>,
+  ResBody = unknown,
+  Locals extends Record<string, unknown> = Record<string, unknown>,
+  MetaResType = unknown,
+  Settings extends SchemaRouteSettings<Path, RouteParameters<Path>, ResBody, Locals, MetaResType> = SchemaRouteSettings<
+    Path,
+    RouteParameters<Path>,
+    ResBody,
+    Locals,
+    MetaResType
+  >,
 >(
   router: IRouter,
   method: 'all' | 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head',
@@ -250,16 +263,71 @@ export function withSchema<
     ResBody,
     Settings['parameters']['standardSchema']['body'] extends StandardSchemaV1
       ? StandardSchemaV1.InferOutput<Settings['parameters']['standardSchema']['body']>
-      : any,
+      : unknown,
     QueryString.ParsedQs,
     Locals,
     MetaResType
   >[]
-) {
+): IRoute<Path, MetaResType>;
+export function withSchema<
+  ResBody = unknown,
+  Locals extends Record<string, unknown> = Record<string, unknown>,
+  MetaResType = unknown,
+  Settings extends SchemaRouteSettingsAnyPath<ParamsDictionary, ResBody, Locals, MetaResType> =
+    SchemaRouteSettingsAnyPath<ParamsDictionary, ResBody, Locals, MetaResType>,
+>(
+  router: IRouter,
+  method: 'all' | 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head',
+  settings: Settings,
+  ...handlers: Controller<
+    Settings['parameters']['standardSchema']['params'] extends StandardSchemaV1
+      ? StandardSchemaV1.InferOutput<Settings['parameters']['standardSchema']['params']>
+      : Settings['path'] extends string
+        ? RouteParameters<Settings['path']>
+        : ParamsDictionary,
+    ResBody,
+    Settings['parameters']['standardSchema']['body'] extends StandardSchemaV1
+      ? StandardSchemaV1.InferOutput<Settings['parameters']['standardSchema']['body']>
+      : unknown,
+    QueryString.ParsedQs,
+    Locals,
+    MetaResType
+  >[]
+): IRoute;
+export function withSchema<
+  Path extends string,
+  ResBody = unknown,
+  Locals extends Record<string, unknown> = Record<string, unknown>,
+  MetaResType = unknown,
+  Settings extends SchemaRouteSettings<Path, RouteParameters<Path>, ResBody, Locals, MetaResType> = SchemaRouteSettings<
+    Path,
+    RouteParameters<Path>,
+    ResBody,
+    Locals,
+    MetaResType
+  >,
+>(
+  router: IRouter,
+  method: 'all' | 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head',
+  settings: Settings,
+  ...handlers: Controller<
+    Settings['parameters']['standardSchema']['params'] extends StandardSchemaV1
+      ? StandardSchemaV1.InferOutput<Settings['parameters']['standardSchema']['params']>
+      : Settings['path'] extends string
+        ? RouteParameters<Settings['path']>
+        : ParamsDictionary,
+    ResBody,
+    Settings['parameters']['standardSchema']['body'] extends StandardSchemaV1
+      ? StandardSchemaV1.InferOutput<Settings['parameters']['standardSchema']['body']>
+      : unknown,
+    QueryString.ParsedQs,
+    Locals,
+    MetaResType
+  >[]
+): IRoute<Path, MetaResType> {
   router.setValidatorsIfNone(validatorSchema());
-  router.route(settings).get();
-  router.route(settings)[method](...handlers);
-  return router;
+  const route = router.route(settings)[method](...handlers);
+  return route;
 }
 
 function testValidator() {
@@ -275,32 +343,19 @@ function testValidator() {
     routing(),
     'post',
     {
-      path: '/example',
+      path: '/:file{.:ext}',
+      //path: /\/example\//,
       parameters: {
         standardSchema: {
           body: bodySchema,
         },
       },
     },
-    (req, res, next) => {
-      req.params;
-      req.body.artist;
+    (req) => {
+      const ps = req.params.ext;
+      const artist = req.body.artist;
     }
   );
-
-  routing().post(
-    {
-      path: '/example/:id',
-    },
-    (req, res, next) => {
-      req.params.id;
-      req.body.artist;
-    }
-  );
-
-  const bParams: RouteParameters<'/example/:id'> = {
-    id: 'example-id',
-  };
 }
 
-//#endregion route
+//#endregion route with standard schema
