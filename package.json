@@ -9,6 +9,11 @@
       "types": "./lib/index.d.ts",
       "require": "./lib/index.js",
       "default": "./lib/index.js"
+    },
+    "./validator": {
+      "types": "./lib/validator.d.ts",
+      "require": "./lib/validator.js",
+      "default": "./lib/validator.js"
     }
   },
   "repository": {

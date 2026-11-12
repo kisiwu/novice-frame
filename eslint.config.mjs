@@ -44,8 +44,8 @@ export default defineConfig([
         'error',
         {
           ignoreRestSiblings: true,
-        }
-      ]
+        },
+      ],
     },
   },
   {

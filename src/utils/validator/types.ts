@@ -157,6 +157,24 @@ export interface RouterWithSchema extends SchemaRouteAdder<
    * - `ResBody`: The type of the response body returned by the route handler.
    * - `Locals`: The type of the `res.locals` object available in the route handler.
    * - `MetaResType`: Usually not specified by the user. If you dont know what it is, you don't need it.
+   *
+   * #### Example usage:
+   * ```ts
+   * const routerWithSchema = createWithSchema(myRouter);
+   *
+   * routerWithSchema
+   *   .with<{ ok: boolean }>()
+   *   .route(
+   *     'post',
+   *     {
+   *       path: '/example',
+   *       schema: { body: myBodySchema }
+   *     },
+   *     (req) => {
+   *       return { ok: true };
+   *     }
+   *   );
+   * ```
    */
   with<
     ResBody,

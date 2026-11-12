@@ -56,40 +56,29 @@ export function withSchema<
 //#region Factory
 
 /**
- * wish to be able to do something like:
+ * Creates a wrapper around the given router that allows defining routes with schema validation.
+ * The returned wrapper provides a `.route()` method for defining routes with schema validation,
+ * a `.with()` method for chaining route definitions, and a `.getRouter()` method to retrieve the original router.
+ *
+ * Example usage:
+ * ```ts
  * const routerWithSchema = createWithSchema(myRouter);
  *
- * routerWithSchema
- * .route<ResBody, Locals, MetaResType>(
+ * routerWithSchema.route(
  *   'post',
  *   {
  *     path: '/example',
- *     schema: {
- *       query: myQuerySchema,
- *       body: myBodySchema,
- *     },
+ *     schema: { body: myBodySchema }
  *   },
  *   myHandler
- * )
- * .route<ResBody2, Locals, MetaResType>(
- *   'put',
- *   {
- *     path: '/another-example',
- *     schema: {
- *       body: myBodySchema,
- *     },
- *   },
- *   myHandler2,
- *   myHandler3
  * );
  *
- * // get back myRouter
  * const originalRouter = routerWithSchema.getRouter();
+ * ```
  *
- * So `.route()` returns the object for chaining further route definitions.
- * And a method tho retrieve the original router.
+ * @param router
+ * @returns
  */
-
 export function createWithSchema(router: IRouter): RouterWithSchema {
   const wrapper = {
     route(

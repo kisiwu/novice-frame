@@ -1,4 +1,4 @@
-import { createWithSchema, withSchema } from './validator/routing';
+import { createWithSchema, withSchema } from '../src/validator';
 import routing from '@novice1/routing';
 import * as v from 'valibot';
 
@@ -44,9 +44,9 @@ export function testValidator() {
     }
   );
 
-  const withSchemaFn = createWithSchema(myRouter);
+  const router = createWithSchema(myRouter);
 
-  withSchemaFn.with<{ ok: boolean }, { ok: string }>().route(
+  router.with<{ ok: boolean }, { ok: string }>().route(
     'get',
     {
       path: '/example',
