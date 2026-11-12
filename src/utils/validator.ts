@@ -1,11 +1,20 @@
 import { Controller } from './routingUtils';
 import routing from '@novice1/routing';
-import type { ErrorRequestHandler, RequestHandler, Request, RouteSettings, MetaParameters } from '@novice1/routing';
+import type {
+  ErrorRequestHandler,
+  RequestHandler,
+  Request,
+  RouteSettings,
+  MetaParameters,
+  IRouter,
+} from '@novice1/routing';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import { ParamsDictionary } from 'express-serve-static-core';
+import { ParamsDictionary, RouteParameters } from 'express-serve-static-core';
 import Extend from 'extend';
 import { IncomingHttpHeaders } from 'node:http';
 import QueryString, { ParsedQs } from 'qs';
+// testing
+import * as v from 'valibot';
 
 const PARAMETERS_PROPS = ['params', 'body', 'query', 'headers', 'cookies', 'files'];
 
@@ -212,41 +221,86 @@ export interface ValidatorConfig {
 }
 
 export type RouteSettingWithSchema<
-  Route extends string,
+  Path extends string,
+  P = RouteParameters<Path>,
   ResBody = any,
   Locals extends Record<string, any> = Record<string, any>,
   MetaResType = any,
 > = {
   parameters: MetaParameters & { standardSchema: StandardValidatorSchema };
-} & RouteSettings<Route, {}, ResBody, any, QueryString.ParsedQs, Locals, MetaResType>;
+} & RouteSettings<Path, P, ResBody, any, QueryString.ParsedQs, Locals, MetaResType>;
 
 export function withSchema<
-  Route extends string,
+  Path extends string,
   ResBody = any,
   Locals extends Record<string, any> = Record<string, any>,
   MetaResType = any,
-  Settings extends RouteSettingWithSchema<Route, ResBody, Locals, MetaResType> = RouteSettingWithSchema<
-    Route,
-    ResBody,
-    Locals,
-    MetaResType
-  >,
+  Settings extends RouteSettingWithSchema<Path, RouteParameters<Path>, ResBody, Locals, MetaResType> =
+    RouteSettingWithSchema<Path, RouteParameters<Path>, ResBody, Locals, MetaResType>,
 >(
+  router: IRouter,
   method: 'all' | 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head',
-  config: Settings,
+  settings: Settings,
   ...handlers: Controller<
-    Settings['parameters']['standardSchema']['params'],
+    Settings['parameters']['standardSchema']['params'] extends StandardSchemaV1
+      ? StandardSchemaV1.InferOutput<Settings['parameters']['standardSchema']['params']>
+      : Settings['path'] extends string
+        ? RouteParameters<Settings['path']>
+        : ParamsDictionary,
     ResBody,
-    Settings['parameters']['standardSchema']['body'],
+    Settings['parameters']['standardSchema']['body'] extends StandardSchemaV1
+      ? StandardSchemaV1.InferOutput<Settings['parameters']['standardSchema']['body']>
+      : any,
     QueryString.ParsedQs,
     Locals,
     MetaResType
   >[]
 ) {
-  const router = routing({});
-  router.route(config).get();
-  router.route(config)[method](...handlers);
+  router.setValidatorsIfNone(validatorSchema());
+  router.route(settings).get();
+  router.route(settings)[method](...handlers);
   return router;
+}
+
+function testValidator() {
+  const bodySchema = v.object({
+    artist: v.string(),
+    title: v.string(),
+    year: v.number(),
+    genres: v.array(v.string()),
+    songDurations: v.array(v.number()),
+    outOfPublication: v.optional(v.boolean()),
+  });
+  withSchema(
+    routing(),
+    'post',
+    {
+      path: '/example',
+      parameters: {
+        standardSchema: {
+          body: bodySchema,
+        },
+      },
+    },
+    (req, res, next) => {
+      req.params;
+      req.body.artist;
+    }
+  );
+
+  routing().post(
+    {
+      path: '/example/:id',
+    },
+    (req, res, next) => {
+      req.params.id;
+      req.body.artist;
+    }
+  );
+
+  const bParams: RouteParameters<'/example/:id'> = {
+    id: 'example-id',
+  };
 }
 
 //#endregion route
