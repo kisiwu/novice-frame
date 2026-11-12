@@ -44,10 +44,9 @@ export function testValidator() {
     }
   );
 
-  const withSchemaFn = createWithSchema<{ ok: boolean }>();
+  const withSchemaFn = createWithSchema<{ ok: boolean }>(myRouter);
 
-  withSchemaFn(
-    myRouter,
+  withSchemaFn.route(
     'get',
     {
       path: '/example',

@@ -3,8 +3,8 @@ import type {
   SchemaRouteSettings,
   SchemaRouteSettingsAnyPath,
   SchemaHandlers,
-  WithSchemaFn,
   SchemaSettings,
+  RouterWithSchema,
 } from './types';
 import { validatorSchema } from './validator';
 import type { IRouter, IRoute, RequestHandler } from '@novice1/routing';
@@ -57,39 +57,64 @@ export function withSchema<
 
 /**
  * wish to be able to do something like:
- * withSchema<ResBody, Locals, MetaResType>(myRouter, 'get', {
- *   path: '/example',
- *   schema: {
- *     query: myQuerySchema,
- *     body: myBodySchema,
- *   },
- * }, myHandler);
+ * const routerWithSchema = createWithSchema(myRouter);
  *
- * We want to be able to define the ResBody, Locals and MetaResTypes first in the generic parameters of the withSchema function.
- * Writing another function that helps us do that is also an option
+ * routerWithSchema
+ * .route<ResBody, Locals, MetaResType>(
+ *   'post',
+ *   {
+ *     path: '/example',
+ *     schema: {
+ *       query: myQuerySchema,
+ *       body: myBodySchema,
+ *     },
+ *   },
+ *   myHandler
+ * )
+ * .route<ResBody2, Locals, MetaResType>(
+ *   'put',
+ *   {
+ *     path: '/another-example',
+ *     schema: {
+ *       body: myBodySchema,
+ *     },
+ *   },
+ *   myHandler2,
+ *   myHandler3
+ * );
+ *
+ * // get back myRouter
+ * const originalRouter = routerWithSchema.getRouter();
+ *
+ * So `.route()` returns the object for chaining further route definitions.
+ * And a method tho retrieve the original router.
  */
 
 export function createWithSchema<
   ResBody = unknown,
   Locals extends Record<string, unknown> = Record<string, unknown>,
   MetaResType = unknown,
->(): WithSchemaFn<ResBody, Locals, MetaResType> {
-  return ((
-    router: IRouter,
-    method: HttpMethod,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    settings: SchemaSettings<any, any, any, any, any>,
-    ...handlers: unknown[]
-  ) => {
-    const { schema, options, onerror, parameters, ...rest } = settings;
-    router.setValidatorsIfNone(validatorSchema(undefined, undefined, 'standardSchema'));
-    return router
-      .route({
-        ...rest,
-        parameters: { ...parameters, standardSchema: schema, standardValidatorOptions: options, onerror },
-      })
-      ?.[method](...(handlers as RequestHandler[]));
-  }) as WithSchemaFn<ResBody, Locals, MetaResType>;
+>(router: IRouter): RouterWithSchema<ResBody, Locals, MetaResType> {
+  const wrapper = {
+    route(
+      method: HttpMethod,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      settings: SchemaSettings<any, any, any, any, any>,
+      ...handlers: unknown[]
+    ) {
+      const { schema, options, onerror, parameters, ...rest } = settings;
+      router.setValidatorsIfNone(validatorSchema(undefined, undefined, 'standardSchema'));
+      router
+        .route({
+          ...rest,
+          parameters: { ...parameters, standardSchema: schema, standardValidatorOptions: options, onerror },
+        })
+        ?.[method](...(handlers as RequestHandler[]));
+      return wrapper;
+    },
+    getRouter: () => router,
+  };
+  return wrapper as unknown as RouterWithSchema<ResBody, Locals, MetaResType>;
 }
 
 //#endregion Factory

@@ -123,19 +123,18 @@ export type SchemaHandlersFor<
 
 export type HttpMethod = 'all' | 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head';
 
-export interface WithSchemaFn<ResBody, Locals extends Record<string, unknown>, MetaResType> {
-  <Path extends string, S extends StandardValidatorSchema>(
-    router: routing.IRouter,
+export interface RouterWithSchema<ResBody, Locals extends Record<string, unknown>, MetaResType> {
+  route<Path extends string, S extends StandardValidatorSchema>(
     method: HttpMethod,
     settings: SchemaSettings<Path, S, ResBody, Locals, MetaResType>,
     ...handlers: SchemaHandlersFor<Path, S, ResBody, Locals, MetaResType>
-  ): routing.IRoute<Path, MetaResType>;
-  <S extends StandardValidatorSchema>(
-    router: routing.IRouter,
+  ): this;
+  route<S extends StandardValidatorSchema>(
     method: HttpMethod,
     settings: SchemaSettings<core.PathParams, S, ResBody, Locals, MetaResType>,
     ...handlers: SchemaHandlersFor<core.PathParams, S, ResBody, Locals, MetaResType>
-  ): routing.IRoute<string, MetaResType>;
+  ): this;
+  getRouter(): routing.IRouter;
 }
 
 //#endregion Factory
