@@ -11,7 +11,7 @@ import type {
 // testing
 import routing from '@novice1/routing';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-import { ParamsDictionary, PathParams, RouteParameters } from 'express-serve-static-core';
+import * as core from 'express-serve-static-core';
 import Extend from 'extend';
 import { IncomingHttpHeaders } from 'node:http';
 import QueryString, { ParsedQs } from 'qs';
@@ -24,7 +24,7 @@ function compareOrder(a: string, b: string): number {
 }
 
 interface ValidationObject {
-  params?: ParamsDictionary;
+  params?: core.ParamsDictionary;
   body?: unknown;
   query?: ParsedQs;
   headers?: IncomingHttpHeaders;
@@ -41,17 +41,48 @@ export type StandardValidatorSchema = {
   files?: StandardSchemaV1 | undefined;
 };
 
-export interface ValidatedFunction {
-  <Q = Record<string, unknown>, P = unknown, B = unknown, H = unknown, C = unknown, F = unknown>(): {
-    query?: Q;
-    params?: P;
-    body?: B;
-    headers?: H;
-    cookies?: C;
-    files?: F;
-    [x: string]: unknown;
-  };
+export type ValidatedData<S extends StandardValidatorSchema> = {
+  [
+    K in keyof S & keyof StandardValidatorSchema as NonNullable<S[K]> extends StandardSchemaV1 ? K : never
+  ]: StandardSchemaV1.InferOutput<NonNullable<S[K]>>;
+};
+
+export interface SchemaController<
+  P,
+  ResBody,
+  ReqBody,
+  ReqQuery,
+  Locals extends Record<string, unknown>,
+  MetaResType,
+  V,
+> {
+  (
+    req: routing.Request<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType> & { validated(): V },
+    res: core.Response<ResBody, Locals>,
+    next: core.NextFunction
+  ): ReturnType<Controller<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>>;
 }
+
+type SchemaHandlers<
+  Settings extends WithStandardSchema & { path: unknown },
+  ResBody,
+  Locals extends Record<string, unknown>,
+  MetaResType,
+> = SchemaController<
+  Settings['parameters']['standardSchema']['params'] extends StandardSchemaV1
+    ? StandardSchemaV1.InferOutput<Settings['parameters']['standardSchema']['params']>
+    : Settings['path'] extends string
+      ? core.RouteParameters<Settings['path']>
+      : core.ParamsDictionary,
+  ResBody,
+  Settings['parameters']['standardSchema']['body'] extends StandardSchemaV1
+    ? StandardSchemaV1.InferOutput<Settings['parameters']['standardSchema']['body']>
+    : unknown,
+  QueryString.ParsedQs,
+  Locals,
+  MetaResType,
+  ValidatedData<Settings['parameters']['standardSchema']>
+>[];
 
 function retrieveParametersValue(
   parameters?: Record<string, unknown>,
@@ -181,7 +212,7 @@ export function validatorSchema(
 
       const propagateSuccess = (result: StandardSchemaV1.SuccessResult<unknown>) => {
         const { query: _query, ...validatedProps } = result.value as Record<PropertyKey, unknown>;
-        req.validated = (() => result.value) as ValidatedFunction;
+        (req as { validated?: () => unknown }).validated = () => result.value;
         Extend(req, validatedProps);
         return next();
       };
@@ -194,6 +225,9 @@ export function validatorSchema(
         return propagateSuccess(result);
       }
 
+      const fullResult: { value: Record<string, unknown> } = {
+        value: {},
+      };
       for (const key of Object.keys(schema).sort(compareOrder)) {
         const result = await validate(
           (schema as Record<string, StandardSchemaV1>)[key],
@@ -203,9 +237,9 @@ export function validatorSchema(
         if (result.issues) {
           return propagateError(new ValidationError(`Validation failed for ${key}`, result.issues));
         }
-        return propagateSuccess(result);
+        fullResult.value[key] = result.value;
       }
-      return next();
+      return propagateSuccess(fullResult);
     } catch (err) {
       next(err);
     }
@@ -225,41 +259,36 @@ export interface WithStandardSchema {
 
 export type SchemaRouteSettings<
   Path extends string,
-  P = RouteParameters<Path>,
+  P = core.RouteParameters<Path>,
   ResBody = unknown,
   Locals extends Record<string, unknown> = Record<string, unknown>,
   MetaResType = unknown,
 > = WithStandardSchema & RouteSettings<Path, P, ResBody, unknown, QueryString.ParsedQs, Locals, MetaResType>;
 
 export type SchemaRouteSettingsAnyPath<
-  P = ParamsDictionary,
+  P = core.ParamsDictionary,
   ResBody = unknown,
   Locals extends Record<string, unknown> = Record<string, unknown>,
   MetaResType = unknown,
-> = WithStandardSchema & RouteSettings<PathParams, P, ResBody, unknown, QueryString.ParsedQs, Locals, MetaResType>;
+> = WithStandardSchema & RouteSettings<core.PathParams, P, ResBody, unknown, QueryString.ParsedQs, Locals, MetaResType>;
 
 export function withSchema<
   Path extends string,
   ResBody = unknown,
   Locals extends Record<string, unknown> = Record<string, unknown>,
   MetaResType = unknown,
-  Settings extends SchemaRouteSettings<Path, RouteParameters<Path>, ResBody, Locals, MetaResType> = SchemaRouteSettings<
-    Path,
-    RouteParameters<Path>,
-    ResBody,
-    Locals,
-    MetaResType
-  >,
+  Settings extends SchemaRouteSettings<Path, core.RouteParameters<Path>, ResBody, Locals, MetaResType> =
+    SchemaRouteSettings<Path, core.RouteParameters<Path>, ResBody, Locals, MetaResType>,
 >(
   router: IRouter,
   method: 'all' | 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head',
   settings: Settings,
-  ...handlers: Controller<
+  ...handlers: SchemaHandlers<Settings, ResBody, Locals, MetaResType> /*Controller<
     Settings['parameters']['standardSchema']['params'] extends StandardSchemaV1
       ? StandardSchemaV1.InferOutput<Settings['parameters']['standardSchema']['params']>
       : Settings['path'] extends string
-        ? RouteParameters<Settings['path']>
-        : ParamsDictionary,
+        ? core.RouteParameters<Settings['path']>
+        : core.ParamsDictionary,
     ResBody,
     Settings['parameters']['standardSchema']['body'] extends StandardSchemaV1
       ? StandardSchemaV1.InferOutput<Settings['parameters']['standardSchema']['body']>
@@ -267,24 +296,24 @@ export function withSchema<
     QueryString.ParsedQs,
     Locals,
     MetaResType
-  >[]
+  >[]*/
 ): IRoute<Path, MetaResType>;
 export function withSchema<
   ResBody = unknown,
   Locals extends Record<string, unknown> = Record<string, unknown>,
   MetaResType = unknown,
-  Settings extends SchemaRouteSettingsAnyPath<ParamsDictionary, ResBody, Locals, MetaResType> =
-    SchemaRouteSettingsAnyPath<ParamsDictionary, ResBody, Locals, MetaResType>,
+  Settings extends SchemaRouteSettingsAnyPath<core.ParamsDictionary, ResBody, Locals, MetaResType> =
+    SchemaRouteSettingsAnyPath<core.ParamsDictionary, ResBody, Locals, MetaResType>,
 >(
   router: IRouter,
   method: 'all' | 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head',
   settings: Settings,
-  ...handlers: Controller<
+  ...handlers: SchemaHandlers<Settings, ResBody, Locals, MetaResType> /*Controller<
     Settings['parameters']['standardSchema']['params'] extends StandardSchemaV1
       ? StandardSchemaV1.InferOutput<Settings['parameters']['standardSchema']['params']>
       : Settings['path'] extends string
-        ? RouteParameters<Settings['path']>
-        : ParamsDictionary,
+        ? core.RouteParameters<Settings['path']>
+        : core.ParamsDictionary,
     ResBody,
     Settings['parameters']['standardSchema']['body'] extends StandardSchemaV1
       ? StandardSchemaV1.InferOutput<Settings['parameters']['standardSchema']['body']>
@@ -292,30 +321,25 @@ export function withSchema<
     QueryString.ParsedQs,
     Locals,
     MetaResType
-  >[]
+  >[]*/
 ): IRoute;
 export function withSchema<
   Path extends string,
   ResBody = unknown,
   Locals extends Record<string, unknown> = Record<string, unknown>,
   MetaResType = unknown,
-  Settings extends SchemaRouteSettings<Path, RouteParameters<Path>, ResBody, Locals, MetaResType> = SchemaRouteSettings<
-    Path,
-    RouteParameters<Path>,
-    ResBody,
-    Locals,
-    MetaResType
-  >,
+  Settings extends SchemaRouteSettings<Path, core.RouteParameters<Path>, ResBody, Locals, MetaResType> =
+    SchemaRouteSettings<Path, core.RouteParameters<Path>, ResBody, Locals, MetaResType>,
 >(
   router: IRouter,
   method: 'all' | 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head',
   settings: Settings,
-  ...handlers: Controller<
+  ...handlers: SchemaHandlers<Settings, ResBody, Locals, MetaResType> /*Controller<
     Settings['parameters']['standardSchema']['params'] extends StandardSchemaV1
       ? StandardSchemaV1.InferOutput<Settings['parameters']['standardSchema']['params']>
       : Settings['path'] extends string
-        ? RouteParameters<Settings['path']>
-        : ParamsDictionary,
+        ? core.RouteParameters<Settings['path']>
+        : core.ParamsDictionary,
     ResBody,
     Settings['parameters']['standardSchema']['body'] extends StandardSchemaV1
       ? StandardSchemaV1.InferOutput<Settings['parameters']['standardSchema']['body']>
@@ -323,10 +347,10 @@ export function withSchema<
     QueryString.ParsedQs,
     Locals,
     MetaResType
-  >[]
+  >[]*/
 ): IRoute<Path, MetaResType> {
   router.setValidatorsIfNone(validatorSchema());
-  const route = router.route(settings)[method](...handlers);
+  const route = router.route(settings)[method](...(handlers as unknown as RequestHandler[]));
   return route;
 }
 
@@ -343,7 +367,7 @@ function testValidator() {
     routing(),
     'post',
     {
-      path: '/:file{.:ext}',
+      path: '/:file{.:ext}/*splat',
       //path: /\/example\//,
       parameters: {
         standardSchema: {
@@ -352,8 +376,13 @@ function testValidator() {
       },
     },
     (req) => {
-      const ps = req.params.ext;
+      const body = req.validated().body;
+      const file = req.params.file;
+      const ext = req.params.ext;
+      const splat = req.params.splat;
       const artist = req.body.artist;
+      const songDurations = req.body.songDurations;
+      const outOfPublication = req.body.outOfPublication;
     }
   );
 }
