@@ -44,9 +44,9 @@ export function testValidator() {
     }
   );
 
-  const withSchemaFn = createWithSchema<{ ok: boolean }>(myRouter);
+  const withSchemaFn = createWithSchema(myRouter);
 
-  withSchemaFn.route(
+  withSchemaFn.with<{ ok: boolean }, { ok: string }>().route(
     'get',
     {
       path: '/example',
@@ -56,7 +56,8 @@ export function testValidator() {
         }),
       },
     },
-    async (req) => {
+    async (req, res) => {
+      res.locals.ok = '2';
       const query = req.validated().query;
       return { ok: !!query.id };
     }

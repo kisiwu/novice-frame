@@ -123,17 +123,50 @@ export type SchemaHandlersFor<
 
 export type HttpMethod = 'all' | 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head';
 
-export interface RouterWithSchema<ResBody, Locals extends Record<string, unknown>, MetaResType> {
+/**
+ * Represents an object that can add schema-based routes to a router.
+ * Provides the `route` method to define routes with request validation and type-safe handlers.
+ */
+export interface SchemaRouteAdder<ResBody, Locals extends Record<string, unknown>, MetaResType, Next> {
   route<Path extends string, S extends StandardValidatorSchema>(
     method: HttpMethod,
     settings: SchemaSettings<Path, S, ResBody, Locals, MetaResType>,
     ...handlers: SchemaHandlersFor<Path, S, ResBody, Locals, MetaResType>
-  ): this;
+  ): Next;
   route<S extends StandardValidatorSchema>(
     method: HttpMethod,
     settings: SchemaSettings<core.PathParams, S, ResBody, Locals, MetaResType>,
     ...handlers: SchemaHandlersFor<core.PathParams, S, ResBody, Locals, MetaResType>
-  ): this;
+  ): Next;
+}
+
+/**
+ * Represents a router that supports schema-based route definitions.
+ * Provides methods to define routes with request validation and type-safe handlers.
+ */
+export interface RouterWithSchema extends SchemaRouteAdder<
+  unknown,
+  Record<string, unknown>,
+  unknown,
+  RouterWithSchema
+> {
+  /**
+   * Returns an object that allows chaining route definitions with schema validation.
+   * Use `.with<ResBody, Locals, MetaResType>()` to specify the types for the route handlers.
+   *
+   * - `ResBody`: The type of the response body returned by the route handler.
+   * - `Locals`: The type of the `res.locals` object available in the route handler.
+   * - `MetaResType`: Usually not specified by the user. If you dont know what it is, you don't need it.
+   */
+  with<
+    ResBody,
+    Locals extends Record<string, unknown> = Record<string, unknown>,
+    MetaResType = unknown,
+  >(): SchemaRouteAdder<ResBody, Locals, MetaResType, RouterWithSchema>;
+
+  /**
+   * Returns the underlying router instance used by the schema-enabled router.
+   */
   getRouter(): routing.IRouter;
 }
 

@@ -90,11 +90,7 @@ export function withSchema<
  * And a method tho retrieve the original router.
  */
 
-export function createWithSchema<
-  ResBody = unknown,
-  Locals extends Record<string, unknown> = Record<string, unknown>,
-  MetaResType = unknown,
->(router: IRouter): RouterWithSchema<ResBody, Locals, MetaResType> {
+export function createWithSchema(router: IRouter): RouterWithSchema {
   const wrapper = {
     route(
       method: HttpMethod,
@@ -112,9 +108,10 @@ export function createWithSchema<
         ?.[method](...(handlers as RequestHandler[]));
       return wrapper;
     },
+    with: () => ({ route: wrapper.route }),
     getRouter: () => router,
   };
-  return wrapper as unknown as RouterWithSchema<ResBody, Locals, MetaResType>;
+  return wrapper as unknown as RouterWithSchema;
 }
 
 //#endregion Factory
