@@ -1,4 +1,4 @@
-import { withSchema } from './validator/routing';
+import { createWithSchema, withSchema } from './validator/routing';
 import routing from '@novice1/routing';
 import * as v from 'valibot';
 
@@ -41,6 +41,25 @@ export function testValidator() {
     },
     (req) => {
       const body = req.validated().body;
+    }
+  );
+
+  const withSchemaFn = createWithSchema<{ ok: boolean }>();
+
+  withSchemaFn(
+    myRouter,
+    'get',
+    {
+      path: '/example',
+      schema: {
+        query: v.object({
+          id: v.string(),
+        }),
+      },
+    },
+    async (req) => {
+      const query = req.validated().query;
+      return { ok: !!query.id };
     }
   );
 }

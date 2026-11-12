@@ -84,3 +84,58 @@ export type SchemaRouteSettingsAnyPath<
   Locals extends Record<string, unknown> = Record<string, unknown>,
   MetaResType = unknown,
 > = WithStandardSchema & RouteSettings<core.PathParams, P, ResBody, unknown, ParsedQs, Locals, MetaResType>;
+
+//#region Factory
+
+type OutputOf<S, K extends string, Fallback> = S extends { [P in K]: infer T }
+  ? T extends StandardSchemaV1
+    ? StandardSchemaV1.InferOutput<T>
+    : Fallback
+  : Fallback;
+
+export type SchemaSettings<
+  Path,
+  S extends StandardValidatorSchema,
+  ResBody,
+  Locals extends Record<string, unknown>,
+  MetaResType,
+> = RouteSettings<Path, unknown, ResBody, unknown, ParsedQs, Locals, MetaResType> & {
+  schema: S;
+  options?: StandardSchemaV1.Options | undefined;
+  onerror?: ErrorRequestHandler | undefined;
+};
+
+export type SchemaHandlersFor<
+  Path,
+  S extends StandardValidatorSchema,
+  ResBody,
+  Locals extends Record<string, unknown>,
+  MetaResType,
+> = SchemaController<
+  OutputOf<S, 'params', Path extends string ? core.RouteParameters<Path> : core.ParamsDictionary>,
+  ResBody,
+  OutputOf<S, 'body', unknown>,
+  OutputOf<S, 'query', ParsedQs>,
+  Locals,
+  MetaResType,
+  ValidatedData<S>
+>[];
+
+export type HttpMethod = 'all' | 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head';
+
+export interface WithSchemaFn<ResBody, Locals extends Record<string, unknown>, MetaResType> {
+  <Path extends string, S extends StandardValidatorSchema>(
+    router: routing.IRouter,
+    method: HttpMethod,
+    settings: SchemaSettings<Path, S, ResBody, Locals, MetaResType>,
+    ...handlers: SchemaHandlersFor<Path, S, ResBody, Locals, MetaResType>
+  ): routing.IRoute<Path, MetaResType>;
+  <S extends StandardValidatorSchema>(
+    router: routing.IRouter,
+    method: HttpMethod,
+    settings: SchemaSettings<core.PathParams, S, ResBody, Locals, MetaResType>,
+    ...handlers: SchemaHandlersFor<core.PathParams, S, ResBody, Locals, MetaResType>
+  ): routing.IRoute<string, MetaResType>;
+}
+
+//#endregion Factory
