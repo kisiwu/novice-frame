@@ -69,3 +69,5 @@ export function validatorSchema(
     }
   };
 }
+
+export const standardValidator = validatorSchema(undefined, undefined, 'standardSchema');

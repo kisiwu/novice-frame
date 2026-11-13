@@ -7,7 +7,7 @@ import type {
   SchemaSettings,
   RouterWithSchema,
 } from './types';
-import { validatorSchema } from './validator';
+import { standardValidator } from './validator';
 import type { IRouter, RequestHandler } from '@novice1/routing';
 import type * as core from 'express-serve-static-core';
 
@@ -49,8 +49,8 @@ export function withSchema<
   settings: Settings,
   ...handlers: SchemaHandlers<Settings, ResBody, Locals, MetaResType>
 ): IRouter {
-  router.setValidatorsIfNone(validatorSchema(undefined, undefined, 'standardSchema'));
   router[method](settings, ...(handlers as unknown as RequestHandler[]).map((h) => controller(h)));
+  router.setValidatorsIfNone(standardValidator);
   return router;
 }
 
@@ -89,7 +89,6 @@ export function createWithSchema(router: IRouter): RouterWithSchema {
       ...handlers: unknown[]
     ) {
       const { schema, options, onerror, parameters, ...rest } = settings;
-      router.setValidators(validatorSchema(undefined, undefined, 'standardSchema'));
       router[method](
         {
           ...rest,
@@ -97,6 +96,7 @@ export function createWithSchema(router: IRouter): RouterWithSchema {
         },
         ...(handlers as RequestHandler[]).map((h) => controller(h))
       );
+      router.setValidatorsIfNone(standardValidator);
       return wrapper;
     },
     with: () => ({ route: wrapper.route }),

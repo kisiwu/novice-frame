@@ -26,7 +26,9 @@
     "format": "cross-env NODE_OPTIONS=--experimental-strip-types prettier --write .",
     "format:check": "cross-env NODE_OPTIONS=--experimental-strip-types prettier --check .",
     "lint": "eslint .",
-    "test": "node --import tsx --test test/**/*.test.ts"
+    "test": "npm run test:e2e",
+    "test:e2e": "node --import tsx --test test/**/*.test.ts",
+    "test:manual": "tsx --watch test/manual/server.ts"
   },
   "keywords": [
     "api",
@@ -41,6 +43,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.7",
     "@eslint/js": "^10.0.1",
+    "@novice1/api-doc-zod-helper": "^1.0.0",
     "@standard-schema/spec": "^1.1.0",
     "@stylistic/eslint-plugin": "^5.10.0",
     "@trivago/prettier-plugin-sort-imports": "^6.0.2",
@@ -66,7 +69,8 @@
     "typedoc": "^0.28.20",
     "typescript": "npm:@typescript/typescript6@^6.0.0",
     "typescript-eslint": "^8.72.2",
-    "valibot": "^1.5.0"
+    "valibot": "^1.5.0",
+    "zod": "^4.6.7"
   },
   "peerDependencies": {
     "@novice1/routing": "^2.1.0",
