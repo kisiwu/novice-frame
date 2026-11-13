@@ -6,8 +6,6 @@ import { z } from 'zod/v4';
 
 const router = createWithSchema(routing());
 
-routing();
-
 router.with<{ message: string; id: string }>().route(
   'post',
   {
