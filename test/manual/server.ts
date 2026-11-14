@@ -28,6 +28,22 @@ const app = new Frame({
     options: {
       swagger: {
         customJs: ['/docs/_resources/swagger-custom.js'],
+        customCss: `
+  /* Hide the Authorize / Login / Logout action buttons inside the modal */
+  .swagger-ui .auth-container .auth-btn-wrapper .authorize,
+  .swagger-ui .auth-container .auth-btn-wrapper button[type="submit"] {
+    display: none !important;
+  }
+
+  /* Optional: Hide input fields (API key / username / password) if you only want to show scheme docs */
+  .swagger-ui .auth-container input[type="text"],
+  .swagger-ui .auth-container input[type="password"] {
+    display: none !important;
+  }
+        `,
+        swaggerOptions: {
+          supportedSubmitMethods: [], // Disable all submit methods
+        },
       },
     },
   },
