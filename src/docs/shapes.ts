@@ -1,6 +1,6 @@
-import { ExampleShape } from './classes/ExampleShape';
-import { SchemaShape } from './classes/SchemaShape';
-import {
+import type { ExampleShape } from './classes/ExampleShape';
+import type { SchemaShape } from './classes/SchemaShape';
+import type {
   OpenAPIOptions,
   PostmanOptions,
   BaseAuthUtil,
@@ -14,7 +14,7 @@ import {
   ServerVariableObject,
   TagObject,
 } from '@novice1/api-doc-generator';
-import { SwaggerUiOptions } from 'swagger-ui-express';
+import type { SwaggerUiOptions } from 'swagger-ui-express';
 
 export * from './classes/ExampleShape';
 export * from './classes/MediaTypeShape';

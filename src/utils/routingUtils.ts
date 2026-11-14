@@ -1,7 +1,8 @@
-import routing from '@novice1/routing';
-import * as core from 'express-serve-static-core';
-import { ParsedQs } from 'qs';
-import Stream, { Readable } from 'stream';
+import type routing from '@novice1/routing';
+import type * as core from 'express-serve-static-core';
+import { Buffer } from 'node:buffer';
+import Stream, { Readable } from 'node:stream';
+import type { ParsedQs } from 'qs';
 
 //#region controller
 

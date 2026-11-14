@@ -8,7 +8,7 @@ import * as bodyParser from 'body-parser';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import express from 'express';
-import http from 'http';
+import http from 'node:http';
 
 export * from '@novice1/app';
 export * from '@novice1/api-doc-generator';

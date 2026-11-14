@@ -1,8 +1,8 @@
 import {
-  IOpenAPIResponseContext,
+  type IOpenAPIResponseContext,
   ResponseUtil,
-  OpenAPIResponseObject as ResponseObject,
-  ReferenceObject,
+  type OpenAPIResponseObject as ResponseObject,
+  type ReferenceObject,
 } from '@novice1/api-doc-generator';
 
 export class ResponseShape extends ResponseUtil {

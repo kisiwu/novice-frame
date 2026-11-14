@@ -1,4 +1,4 @@
-import { ExampleObject, ReferenceObject } from '@novice1/api-doc-generator';
+import type { ExampleObject, ReferenceObject } from '@novice1/api-doc-generator';
 
 export class ExampleShape {
   protected name: string;

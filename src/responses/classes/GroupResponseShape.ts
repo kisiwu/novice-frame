@@ -1,9 +1,9 @@
 import { ResponseShape } from './ResponseShape';
 import {
-  BaseResponseUtil,
+  type BaseResponseUtil,
   GroupResponseUtil,
-  OpenAPIResponseObject as ResponseObject,
-  ReferenceObject,
+  type OpenAPIResponseObject as ResponseObject,
+  type ReferenceObject,
 } from '@novice1/api-doc-generator';
 import extend from 'extend';
 

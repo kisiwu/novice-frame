@@ -2,9 +2,31 @@ import router from './router';
 import { OpenAPIZodHelper, PostmanZodHelper } from '@novice1/api-doc-zod-helper';
 import { Frame } from '@novice1/frame';
 import { HttpError, HTTP_ERRORS } from '@novice1/frame/errors';
+import type { Buffer } from 'node:buffer';
 import { AddressInfo } from 'node:net';
 
 const app = new Frame({
+  framework: {
+    bodyParser: {
+      json: {
+        verify: (req, _, buf) => {
+          if (buf && buf.length) {
+            // Save the raw Buffer on the request object for later use
+            (req as { _rawBody?: Buffer })._rawBody = buf;
+          }
+        },
+      },
+      urlencoded: {
+        extended: true,
+        verify: (req, _, buf) => {
+          if (buf && buf.length) {
+            // Save the raw Buffer on the request object for later use
+            (req as { _rawBody?: Buffer })._rawBody = buf;
+          }
+        },
+      },
+    },
+  },
   routers: [router],
   docs: {
     path: '/docs',

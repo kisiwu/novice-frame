@@ -1,6 +1,6 @@
-import { DocsOptions } from '../docs';
-import { OpenAPI, Postman } from '@novice1/api-doc-generator';
-import routing, { RequestHandler } from '@novice1/routing';
+import type { DocsOptions } from '../docs';
+import type { OpenAPI, Postman } from '@novice1/api-doc-generator';
+import routing, { type RequestHandler } from '@novice1/routing';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
 
