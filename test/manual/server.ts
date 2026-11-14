@@ -1,33 +1,19 @@
+import { clientCredentialsShape, flowRouter, tokenToSessionMiddleware } from './client-creds';
 import router from './router';
+import { createBodyParserOptions } from './security/utils';
 import { OpenAPIZodHelper, PostmanZodHelper } from '@novice1/api-doc-zod-helper';
 import { Frame } from '@novice1/frame';
 import { HttpError, HTTP_ERRORS } from '@novice1/frame/errors';
-import type { Buffer } from 'node:buffer';
 import { AddressInfo } from 'node:net';
 
 const app = new Frame({
   framework: {
     bodyParser: {
-      json: {
-        verify: (req, _, buf) => {
-          if (buf && buf.length) {
-            // Save the raw Buffer on the request object for later use
-            (req as { _rawBody?: Buffer })._rawBody = buf;
-          }
-        },
-      },
-      urlencoded: {
-        extended: true,
-        verify: (req, _, buf) => {
-          if (buf && buf.length) {
-            // Save the raw Buffer on the request object for later use
-            (req as { _rawBody?: Buffer })._rawBody = buf;
-          }
-        },
-      },
+      ...createBodyParserOptions(),
     },
+    middlewares: [tokenToSessionMiddleware],
   },
-  routers: [router],
+  routers: [router, flowRouter],
   docs: {
     path: '/docs',
     openAPIOptions: {
@@ -45,6 +31,7 @@ const app = new Frame({
       },
     },
   },
+  security: clientCredentialsShape,
 });
 
 app.get({ path: '/docs/_resources/swagger-custom.js', parameters: { undoc: true } }, (_, res) => {

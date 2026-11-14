@@ -1,3 +1,4 @@
+import { clientCredentialsScheme, isAppSessionMiddleware, requiredScopesMiddleware } from './client-creds';
 import {
   addMessage,
   deleteMessageById,
@@ -43,7 +44,9 @@ router.with<{ message: string; id: string }>().post(
     name: 'Post a message',
     description: 'Posts a new message',
     tags: ['Messages'],
+    auth: true,
     parameters: {
+      security: clientCredentialsScheme.toOpenAPISecurity(['write']),
       story: `### The Post Message Endpoint
 This endpoint allows you to post a new message.
 
@@ -70,6 +73,8 @@ The request body must include a "message" field of type string.
       })
       .setCode(200),
   },
+  isAppSessionMiddleware,
+  requiredScopesMiddleware(['write']),
   async (req) => {
     const {
       body: { message },
@@ -160,12 +165,18 @@ router
       name: 'Get comments for a message',
       description: 'Retrieves all comments for a single message by ID',
       tags: ['Messages'],
+      auth: true,
+      parameters: {
+        security: clientCredentialsScheme.toOpenAPISecurity(['read']),
+      },
       schema: {
         params: z.object({
           id: z.string(),
         }),
       },
     },
+    isAppSessionMiddleware,
+    requiredScopesMiddleware(['read']),
     () => {
       throw new HttpError('Not implemented', 501);
     }
@@ -181,6 +192,10 @@ router.with<z.infer<typeof resBodyMessageSchema>>().put(
     name: 'Update a message',
     description: 'Updates a single message by ID',
     tags: ['Messages'],
+    auth: true,
+    parameters: {
+      security: clientCredentialsScheme.toOpenAPISecurity(['write']),
+    },
     schema: {
       params: z.object({
         id: z.string(),
@@ -196,6 +211,8 @@ router.with<z.infer<typeof resBodyMessageSchema>>().put(
       })
       .setCode(200),
   },
+  isAppSessionMiddleware,
+  requiredScopesMiddleware(['write']),
   async ({ params: { id }, validated }) => {
     const {
       body: { message },
@@ -218,6 +235,10 @@ router.delete(
     name: 'Delete a message',
     description: 'Deletes a single message by ID',
     tags: ['Messages'],
+    auth: true,
+    parameters: {
+      security: clientCredentialsScheme.toOpenAPISecurity(['write']),
+    },
     schema: {
       params: z.object({
         id: z.string(),
@@ -225,6 +246,8 @@ router.delete(
     },
     responses: new ResponseShape().setDescription('Delete request successful').setCode(200),
   },
+  isAppSessionMiddleware,
+  requiredScopesMiddleware(['write']),
   async ({ params: { id } }) => {
     const deleted = await deleteMessageById(id);
     if (deleted) {

@@ -1,8 +1,44 @@
 import type { Request as NoviceRequest } from '@novice1/routing';
+import type { OptionsJson, OptionsUrlencoded } from 'body-parser';
+import type { Request as ExpressRequest } from 'express';
 import { Buffer } from 'node:buffer';
 import { Readable } from 'node:stream';
 
-export function toWebRequest(req: NoviceRequest): Request {
+/**
+ * Creates options for body parsers that save the raw request body on the request object.
+ * This is useful for scenarios where the raw body is needed for verification or processing.
+ *
+ * @returns An object containing `json` and `urlencoded` options for body parsers
+ */
+export function createBodyParserOptions(): { json: OptionsJson; urlencoded: OptionsUrlencoded } {
+  return {
+    json: {
+      verify: (req, _, buf) => {
+        if (buf && buf.length) {
+          // Save the raw Buffer on the request object for later use
+          (req as { _rawBody?: Buffer })._rawBody = buf;
+        }
+      },
+    },
+    urlencoded: {
+      extended: true,
+      verify: (req, _, buf) => {
+        if (buf && buf.length) {
+          // Save the raw Buffer on the request object for later use
+          (req as { _rawBody?: Buffer })._rawBody = buf;
+        }
+      },
+    },
+  };
+}
+
+/**
+ * Converts an Express or Novice request into a standard Web Request object.
+ *
+ * @param req The incoming Express or Novice request
+ * @returns A standard Web Request object representing the incoming request
+ */
+export function toWebRequest(req: NoviceRequest | ExpressRequest): Request {
   const protocol = req.protocol || 'http';
   const host = req.get('host') || 'localhost';
   const url = new URL(req.originalUrl || req.url, `${protocol}://${host}`);
@@ -22,6 +58,7 @@ export function toWebRequest(req: NoviceRequest): Request {
 
   if (hasBody) {
     if (rawBody) {
+      console.log('Using raw body for request');
       body = Readable.toWeb(Readable.from(rawBody ?? Buffer.alloc(0))) as ReadableStream;
     } else if (req.readableEnded && req.body !== undefined) {
       const contentType = req.get('content-type') || '';
