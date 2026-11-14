@@ -1,5 +1,4 @@
 import routing from '@novice1/routing';
-// import type { StandardSchemaV1 } from '@standard-schema/spec';
 import * as core from 'express-serve-static-core';
 import { ParsedQs } from 'qs';
 import Stream, { Readable } from 'stream';

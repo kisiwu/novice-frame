@@ -13,6 +13,7 @@ tsconfig.json
 CHANGELOG.md
 .prettierignore
 prettier.config.*
+*.local.md
 
 # Logs
 logs
