@@ -1,13 +1,43 @@
-import { addMessage, getMessages } from './data';
+import {
+  addMessage,
+  deleteMessageById,
+  getMessageById,
+  getMessages,
+  getMessagesWithSensitiveData,
+  updateMessageById,
+} from './data';
 import { ResponseShape, SchemaObject } from '@novice1/frame';
+import { HttpError } from '@novice1/frame/errors';
 import { createWithSchema } from '@novice1/frame/validator';
 import routing from '@novice1/routing';
 import { z } from 'zod/v4';
 
-const router = createWithSchema(routing());
+//#region Constants
 
-router.with<{ message: string; id: string }>().route(
-  'post',
+/**
+ * Schema for a single message in the response body.
+ * This avoids including sensitive data in the response.
+ */
+const resBodyMessageSchema = z
+  .object({
+    id: z.string(),
+    message: z.string(),
+  })
+  .strict();
+
+/**
+ * Schema for the list of messages in the response body.
+ * This ensures that each message in the list conforms to the single message schema.
+ */
+const resBodyListSchema = z.array(resBodyMessageSchema);
+
+const router = createWithSchema();
+
+//#endregion Constants
+
+//#region Post
+
+router.with<{ message: string; id: string }>().post(
   {
     path: '/messages',
     name: 'Post a message',
@@ -42,28 +72,23 @@ router.with<{ message: string; id: string }>().route(
   }
 );
 
-/**
- * Avoid sensitive data in the response body
- */
-const resBodyListSchema = z.array(
-  z
-    .object({
-      id: z.string(),
-      message: z.string(),
-    })
-    .strict()
-);
+//#endregion Post
 
-router.with<{ id: string; message: string }[]>().route(
-  'get',
+//#region List
+
+router.with<z.infer<typeof resBodyListSchema>>().get(
   {
     path: '/messages',
-    name: 'Get messages',
+    name: 'List messages',
     description: 'Retrieves all messages',
     tags: ['Messages'],
     schema: {
       query: z.object({
         search: z.string().min(2).optional(),
+        force: z.preprocess(
+          (x: unknown) => (typeof x === 'string' && x.toLocaleLowerCase() === 'true' ? true : false),
+          z.boolean().meta({ description: 'Try to force getting sensitive data' }).optional()
+        ),
       }),
     },
     responses: new ResponseShape()
@@ -73,17 +98,117 @@ router.with<{ id: string; message: string }[]>().route(
       })
       .setCode(200),
   },
-  async (req) => {
+  async ({ method, originalUrl, validated }) => {
     const {
-      query: { search },
-    } = req.validated();
-    const messages = await getMessages();
+      query: { search, force },
+    } = validated();
+    const messages = force ? await getMessagesWithSensitiveData(search) : await getMessages(search);
     const ok = resBodyListSchema.validate(messages);
     if (ok) {
-      return search ? messages.filter((m) => m.message.includes(search)) : messages;
+      return messages;
     }
-    throw new Error('Response body validation failed');
+    throw new HttpError(`Response body validation failed at ${method.toUpperCase()} ${originalUrl}`);
   }
 );
 
-export default router.getRouter();
+//#endregion List
+
+//#region Get
+
+router.with<z.infer<typeof resBodyMessageSchema>>().get(
+  {
+    path: '/messages/:id',
+    name: 'Get a message',
+    description: 'Retrieves a single message by ID',
+    tags: ['Messages'],
+    schema: {
+      params: z.object({
+        id: z.string(),
+      }),
+    },
+    responses: new ResponseShape()
+      .setDescription('Get request successful')
+      .addMediaType('application/json', {
+        schema: resBodyMessageSchema.toJSONSchema() as SchemaObject,
+      })
+      .setCode(200),
+  },
+  async ({ method, originalUrl, params: { id } }) => {
+    const message = await getMessageById(id);
+    if (message) {
+      const ok = resBodyMessageSchema.validate(message);
+      if (!ok) {
+        throw new HttpError(`Response body validation failed at ${method.toUpperCase()} ${originalUrl}`);
+      }
+      return message;
+    }
+    throw new HttpError('Message not found', 404);
+  }
+);
+
+//#endregion Get
+
+//#region Update
+
+router.with<z.infer<typeof resBodyMessageSchema>>().put(
+  {
+    path: '/messages/:id',
+    name: 'Update a message',
+    description: 'Updates a single message by ID',
+    tags: ['Messages'],
+    schema: {
+      params: z.object({
+        id: z.string(),
+      }),
+      body: z.object({
+        message: z.string().min(1),
+      }),
+    },
+    responses: new ResponseShape()
+      .setDescription('Update request successful')
+      .addMediaType('application/json', {
+        schema: resBodyMessageSchema.toJSONSchema() as SchemaObject,
+      })
+      .setCode(200),
+  },
+  async ({ params: { id }, validated }) => {
+    const {
+      body: { message },
+    } = validated();
+    const updated = await updateMessageById(id, message);
+    if (updated) {
+      return { id, message };
+    }
+    throw new HttpError('Message not found', 404);
+  }
+);
+
+//#endregion Update
+
+//#region Delete
+
+router.delete(
+  {
+    path: '/messages/:id',
+    name: 'Delete a message',
+    description: 'Deletes a single message by ID',
+    tags: ['Messages'],
+    schema: {
+      params: z.object({
+        id: z.string(),
+      }),
+    },
+    responses: new ResponseShape().setDescription('Delete request successful').setCode(200),
+  },
+  async ({ params: { id } }) => {
+    const deleted = await deleteMessageById(id);
+    if (deleted) {
+      return { id };
+    }
+    throw new HttpError('Message not found', 404);
+  }
+);
+
+//#endregion Delete
+
+export default routing().use('/api', router.getRouter());

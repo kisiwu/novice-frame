@@ -1,60 +1,12 @@
 import { controller } from '../routingUtils';
-import type {
-  HttpMethod,
-  SchemaRouteSettings,
-  SchemaRouteSettingsAnyPath,
-  SchemaHandlers,
-  SchemaSettings,
-  RouterWithSchema,
-} from './types';
+import type { RouterWithSchema, SchemaMethodSettings, SchemaRouteSettings } from './types';
 import { standardValidator } from './validator';
 import type { IRouter, RequestHandler } from '@novice1/routing';
-import type * as core from 'express-serve-static-core';
-
-export function withSchema<
-  Path extends string,
-  ResBody = unknown,
-  Locals extends Record<string, unknown> = Record<string, unknown>,
-  MetaResType = unknown,
-  Settings extends SchemaRouteSettings<Path, core.RouteParameters<Path>, ResBody, Locals, MetaResType> =
-    SchemaRouteSettings<Path, core.RouteParameters<Path>, ResBody, Locals, MetaResType>,
->(
-  router: IRouter,
-  method: HttpMethod,
-  settings: Settings,
-  ...handlers: SchemaHandlers<Settings, ResBody, Locals, MetaResType>
-): IRouter;
-export function withSchema<
-  ResBody = unknown,
-  Locals extends Record<string, unknown> = Record<string, unknown>,
-  MetaResType = unknown,
-  Settings extends SchemaRouteSettingsAnyPath<core.ParamsDictionary, ResBody, Locals, MetaResType> =
-    SchemaRouteSettingsAnyPath<core.ParamsDictionary, ResBody, Locals, MetaResType>,
->(
-  router: IRouter,
-  method: HttpMethod,
-  settings: Settings,
-  ...handlers: SchemaHandlers<Settings, ResBody, Locals, MetaResType>
-): IRouter;
-export function withSchema<
-  Path extends string,
-  ResBody = unknown,
-  Locals extends Record<string, unknown> = Record<string, unknown>,
-  MetaResType = unknown,
-  Settings extends SchemaRouteSettings<Path, core.RouteParameters<Path>, ResBody, Locals, MetaResType> =
-    SchemaRouteSettings<Path, core.RouteParameters<Path>, ResBody, Locals, MetaResType>,
->(
-  router: IRouter,
-  method: HttpMethod,
-  settings: Settings,
-  ...handlers: SchemaHandlers<Settings, ResBody, Locals, MetaResType>
-): IRouter {
-  router[method](settings, ...(handlers as unknown as RequestHandler[]).map((h) => controller(h)));
-  router.setValidatorsIfNone(standardValidator);
-  return router;
-}
+import routing from '@novice1/routing';
 
 //#region Factory
+
+const methods = ['all', 'head', 'get', 'post', 'put', 'delete', 'patch', 'options'] as const;
 
 /**
  * Creates a wrapper around the given router that allows defining routes with schema validation.
@@ -66,9 +18,9 @@ export function withSchema<
  * const routerWithSchema = createWithSchema(myRouter);
  *
  * routerWithSchema.route(
- *   'post',
  *   {
  *     path: '/example',
+ *     method: 'post',
  *     schema: { body: myBodySchema }
  *   },
  *   myHandler
@@ -80,15 +32,14 @@ export function withSchema<
  * @param router
  * @returns
  */
-export function createWithSchema(router: IRouter): RouterWithSchema {
-  const wrapper = {
+export function createWithSchema(router: IRouter = routing()): RouterWithSchema {
+  const adder = {
     route(
-      method: HttpMethod,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      settings: SchemaSettings<any, any, any, any, any>,
+      settings: SchemaRouteSettings<any, any, any, any, any>,
       ...handlers: unknown[]
     ) {
-      const { schema, options, onerror, parameters, ...rest } = settings;
+      const { method, schema, options, onerror, parameters, ...rest } = settings;
       router[method](
         {
           ...rest,
@@ -99,7 +50,20 @@ export function createWithSchema(router: IRouter): RouterWithSchema {
       router.setValidatorsIfNone(standardValidator);
       return wrapper;
     },
-    with: () => ({ route: wrapper.route }),
+    ...Object.fromEntries(
+      methods.map((m) => [
+        m,
+        (
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          settings: SchemaMethodSettings<any, any, any, any, any>,
+          ...handlers: unknown[]
+        ) => wrapper.route({ ...settings, method: m }, ...handlers),
+      ])
+    ),
+  };
+  const wrapper = {
+    ...adder,
+    with: () => ({ ...adder }),
     getRouter: () => router,
   };
   return wrapper as unknown as RouterWithSchema;

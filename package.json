@@ -14,6 +14,11 @@
       "types": "./lib/validator.d.ts",
       "require": "./lib/validator.js",
       "default": "./lib/validator.js"
+    },
+    "./errors": {
+      "types": "./lib/errors.d.ts",
+      "require": "./lib/errors.js",
+      "default": "./lib/errors.js"
     }
   },
   "repository": {

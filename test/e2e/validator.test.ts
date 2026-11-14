@@ -27,9 +27,9 @@ describe('Validator Tests', () => {
     // create a router with schema validation
     const router = createWithSchema(myRouter);
     router.with<{ ok: boolean; result?: v.InferInput<typeof bodySchema> }>().route(
-      'put',
       {
         path: '/example/:id',
+        method: 'put',
         schema: {
           params: v.object({
             id: v.string(),

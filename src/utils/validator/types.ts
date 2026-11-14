@@ -1,5 +1,5 @@
 import type { Controller } from '../routingUtils';
-import type { ErrorRequestHandler, RouteSettings, MetaParameters } from '@novice1/routing';
+import type { ErrorRequestHandler, RouteSettings } from '@novice1/routing';
 import type routing from '@novice1/routing';
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import type * as core from 'express-serve-static-core';
@@ -36,55 +36,6 @@ export interface SchemaController<
   ): ReturnType<Controller<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>>;
 }
 
-export type SchemaHandlers<
-  Settings extends WithStandardSchema & { path: unknown },
-  ResBody,
-  Locals extends Record<string, unknown>,
-  MetaResType,
-> = SchemaController<
-  Settings['parameters']['standardSchema']['params'] extends StandardSchemaV1
-    ? StandardSchemaV1.InferOutput<Settings['parameters']['standardSchema']['params']>
-    : Settings['path'] extends string
-      ? core.RouteParameters<Settings['path']>
-      : core.ParamsDictionary,
-  ResBody,
-  Settings['parameters']['standardSchema']['body'] extends StandardSchemaV1
-    ? StandardSchemaV1.InferOutput<Settings['parameters']['standardSchema']['body']>
-    : unknown,
-  ParsedQs,
-  Locals,
-  MetaResType,
-  ValidatedData<Settings['parameters']['standardSchema']>
->[];
-
-export interface ValidatorConfig {
-  options?: StandardSchemaV1.Options | undefined;
-  onerror?: ErrorRequestHandler | undefined;
-}
-
-export interface WithStandardSchema {
-  parameters: MetaParameters & {
-    standardSchema: StandardValidatorSchema;
-    options?: StandardSchemaV1.Options | undefined;
-    onerror?: ErrorRequestHandler | undefined;
-  };
-}
-
-export type SchemaRouteSettings<
-  Path extends string,
-  P = core.RouteParameters<Path>,
-  ResBody = unknown,
-  Locals extends Record<string, unknown> = Record<string, unknown>,
-  MetaResType = unknown,
-> = WithStandardSchema & RouteSettings<Path, P, ResBody, unknown, ParsedQs, Locals, MetaResType>;
-
-export type SchemaRouteSettingsAnyPath<
-  P = core.ParamsDictionary,
-  ResBody = unknown,
-  Locals extends Record<string, unknown> = Record<string, unknown>,
-  MetaResType = unknown,
-> = WithStandardSchema & RouteSettings<core.PathParams, P, ResBody, unknown, ParsedQs, Locals, MetaResType>;
-
 //#region Factory
 
 type OutputOf<S, K extends string, Fallback> = S extends { [P in K]: infer T }
@@ -93,7 +44,9 @@ type OutputOf<S, K extends string, Fallback> = S extends { [P in K]: infer T }
     : Fallback
   : Fallback;
 
-export type SchemaSettings<
+export type RouterMethod = 'all' | 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head';
+
+export type SchemaMethodSettings<
   Path,
   S extends StandardValidatorSchema,
   ResBody,
@@ -104,6 +57,14 @@ export type SchemaSettings<
   options?: StandardSchemaV1.Options | undefined;
   onerror?: ErrorRequestHandler | undefined;
 };
+
+export type SchemaRouteSettings<
+  Path,
+  S extends StandardValidatorSchema,
+  ResBody,
+  Locals extends Record<string, unknown>,
+  MetaResType,
+> = SchemaMethodSettings<Path, S, ResBody, Locals, MetaResType> & { method: RouterMethod };
 
 export type SchemaHandlersFor<
   Path,
@@ -121,21 +82,81 @@ export type SchemaHandlersFor<
   ValidatedData<S>
 >[];
 
-export type HttpMethod = 'all' | 'get' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'head';
-
 /**
  * Represents an object that can add schema-based routes to a router.
  * Provides the `route` method to define routes with request validation and type-safe handlers.
  */
 export interface SchemaRouteAdder<ResBody, Locals extends Record<string, unknown>, MetaResType, Next> {
   route<Path extends string, S extends StandardValidatorSchema>(
-    method: HttpMethod,
-    settings: SchemaSettings<Path, S, ResBody, Locals, MetaResType>,
+    settings: SchemaRouteSettings<Path, S, ResBody, Locals, MetaResType>,
     ...handlers: SchemaHandlersFor<Path, S, ResBody, Locals, MetaResType>
   ): Next;
   route<S extends StandardValidatorSchema>(
-    method: HttpMethod,
-    settings: SchemaSettings<core.PathParams, S, ResBody, Locals, MetaResType>,
+    settings: SchemaRouteSettings<core.PathParams, S, ResBody, Locals, MetaResType>,
+    ...handlers: SchemaHandlersFor<core.PathParams, S, ResBody, Locals, MetaResType>
+  ): Next;
+  all<Path extends string, S extends StandardValidatorSchema>(
+    settings: SchemaMethodSettings<Path, S, ResBody, Locals, MetaResType>,
+    ...handlers: SchemaHandlersFor<Path, S, ResBody, Locals, MetaResType>
+  ): Next;
+  all<S extends StandardValidatorSchema>(
+    settings: SchemaMethodSettings<core.PathParams, S, ResBody, Locals, MetaResType>,
+    ...handlers: SchemaHandlersFor<core.PathParams, S, ResBody, Locals, MetaResType>
+  ): Next;
+  head<Path extends string, S extends StandardValidatorSchema>(
+    settings: SchemaMethodSettings<Path, S, ResBody, Locals, MetaResType>,
+    ...handlers: SchemaHandlersFor<Path, S, ResBody, Locals, MetaResType>
+  ): Next;
+  head<S extends StandardValidatorSchema>(
+    settings: SchemaMethodSettings<core.PathParams, S, ResBody, Locals, MetaResType>,
+    ...handlers: SchemaHandlersFor<core.PathParams, S, ResBody, Locals, MetaResType>
+  ): Next;
+  get<Path extends string, S extends StandardValidatorSchema>(
+    settings: SchemaMethodSettings<Path, S, ResBody, Locals, MetaResType>,
+    ...handlers: SchemaHandlersFor<Path, S, ResBody, Locals, MetaResType>
+  ): Next;
+  get<S extends StandardValidatorSchema>(
+    settings: SchemaMethodSettings<core.PathParams, S, ResBody, Locals, MetaResType>,
+    ...handlers: SchemaHandlersFor<core.PathParams, S, ResBody, Locals, MetaResType>
+  ): Next;
+  post<Path extends string, S extends StandardValidatorSchema>(
+    settings: SchemaMethodSettings<Path, S, ResBody, Locals, MetaResType>,
+    ...handlers: SchemaHandlersFor<Path, S, ResBody, Locals, MetaResType>
+  ): Next;
+  post<S extends StandardValidatorSchema>(
+    settings: SchemaMethodSettings<core.PathParams, S, ResBody, Locals, MetaResType>,
+    ...handlers: SchemaHandlersFor<core.PathParams, S, ResBody, Locals, MetaResType>
+  ): Next;
+  put<Path extends string, S extends StandardValidatorSchema>(
+    settings: SchemaMethodSettings<Path, S, ResBody, Locals, MetaResType>,
+    ...handlers: SchemaHandlersFor<Path, S, ResBody, Locals, MetaResType>
+  ): Next;
+  put<S extends StandardValidatorSchema>(
+    settings: SchemaMethodSettings<core.PathParams, S, ResBody, Locals, MetaResType>,
+    ...handlers: SchemaHandlersFor<core.PathParams, S, ResBody, Locals, MetaResType>
+  ): Next;
+  delete<Path extends string, S extends StandardValidatorSchema>(
+    settings: SchemaMethodSettings<Path, S, ResBody, Locals, MetaResType>,
+    ...handlers: SchemaHandlersFor<Path, S, ResBody, Locals, MetaResType>
+  ): Next;
+  delete<S extends StandardValidatorSchema>(
+    settings: SchemaMethodSettings<core.PathParams, S, ResBody, Locals, MetaResType>,
+    ...handlers: SchemaHandlersFor<core.PathParams, S, ResBody, Locals, MetaResType>
+  ): Next;
+  patch<Path extends string, S extends StandardValidatorSchema>(
+    settings: SchemaMethodSettings<Path, S, ResBody, Locals, MetaResType>,
+    ...handlers: SchemaHandlersFor<Path, S, ResBody, Locals, MetaResType>
+  ): Next;
+  patch<S extends StandardValidatorSchema>(
+    settings: SchemaMethodSettings<core.PathParams, S, ResBody, Locals, MetaResType>,
+    ...handlers: SchemaHandlersFor<core.PathParams, S, ResBody, Locals, MetaResType>
+  ): Next;
+  options<Path extends string, S extends StandardValidatorSchema>(
+    settings: SchemaMethodSettings<Path, S, ResBody, Locals, MetaResType>,
+    ...handlers: SchemaHandlersFor<Path, S, ResBody, Locals, MetaResType>
+  ): Next;
+  options<S extends StandardValidatorSchema>(
+    settings: SchemaMethodSettings<core.PathParams, S, ResBody, Locals, MetaResType>,
     ...handlers: SchemaHandlersFor<core.PathParams, S, ResBody, Locals, MetaResType>
   ): Next;
 }
@@ -165,9 +186,9 @@ export interface RouterWithSchema extends SchemaRouteAdder<
    * routerWithSchema
    *   .with<{ ok: boolean }>()
    *   .route(
-   *     'post',
    *     {
    *       path: '/example',
+   *       method: 'post',
    *       schema: { body: myBodySchema }
    *     },
    *     (req) => {
