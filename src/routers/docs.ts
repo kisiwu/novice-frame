@@ -46,7 +46,7 @@ export function createDocsRouter(
       </head>
       <body>
         <redoc spec-url='${path}/schema?json=true'></redoc>
-        <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"> </script>
+        <script type="module" src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"> </script>
         ${redocCustomJs ? `<script src="${redocCustomJs}"> </script>` : ''}
       </body>
     </html>

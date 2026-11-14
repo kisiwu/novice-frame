@@ -43,6 +43,13 @@ router.with<{ message: string; id: string }>().post(
     name: 'Post a message',
     description: 'Posts a new message',
     tags: ['Messages'],
+    parameters: {
+      story: `### The Post Message Endpoint
+This endpoint allows you to post a new message.
+
+The request body must include a "message" field of type string.
+      `,
+    },
     schema: {
       body: z.object({
         message: z.string(),
@@ -115,36 +122,54 @@ router.with<z.infer<typeof resBodyListSchema>>().get(
 
 //#region Get
 
-router.with<z.infer<typeof resBodyMessageSchema>>().get(
-  {
-    path: '/messages/:id',
-    name: 'Get a message',
-    description: 'Retrieves a single message by ID',
-    tags: ['Messages'],
-    schema: {
-      params: z.object({
-        id: z.string(),
-      }),
+router
+  .with<z.infer<typeof resBodyMessageSchema>>()
+  .get(
+    {
+      path: '/messages/:id',
+      name: 'Get a message',
+      description: 'Retrieves a single message by ID',
+      tags: ['Messages'],
+      schema: {
+        params: z.object({
+          id: z.string(),
+        }),
+      },
+      responses: new ResponseShape()
+        .setDescription('Get request successful')
+        .addMediaType('application/json', {
+          schema: resBodyMessageSchema.toJSONSchema() as SchemaObject,
+        })
+        .setCode(200),
     },
-    responses: new ResponseShape()
-      .setDescription('Get request successful')
-      .addMediaType('application/json', {
-        schema: resBodyMessageSchema.toJSONSchema() as SchemaObject,
-      })
-      .setCode(200),
-  },
-  async ({ method, originalUrl, params: { id } }) => {
-    const message = await getMessageById(id);
-    if (message) {
-      const ok = resBodyMessageSchema.validate(message);
-      if (!ok) {
-        throw new HttpError(`Response body validation failed at ${method.toUpperCase()} ${originalUrl}`);
+    async ({ method, originalUrl, params: { id } }) => {
+      const message = await getMessageById(id);
+      if (message) {
+        const ok = resBodyMessageSchema.validate(message);
+        if (!ok) {
+          throw new HttpError(`Response body validation failed at ${method.toUpperCase()} ${originalUrl}`);
+        }
+        return message;
       }
-      return message;
+      throw new HttpError('Message not found', 404);
     }
-    throw new HttpError('Message not found', 404);
-  }
-);
+  )
+  .get(
+    {
+      path: '/messages/:id/comments',
+      name: 'Get comments for a message',
+      description: 'Retrieves all comments for a single message by ID',
+      tags: ['Messages'],
+      schema: {
+        params: z.object({
+          id: z.string(),
+        }),
+      },
+    },
+    () => {
+      throw new HttpError('Not implemented', 501);
+    }
+  );
 
 //#endregion Get
 
