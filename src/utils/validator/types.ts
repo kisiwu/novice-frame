@@ -36,6 +36,21 @@ export interface SchemaController<
   ): ReturnType<Controller<P, ResBody, ReqBody, ReqQuery, Locals, MetaResType>>;
 }
 
+export type SchemaControllerFor<
+  Refs extends StandardValidatorSchema = StandardValidatorSchema,
+  ResBody = unknown,
+  Locals extends Record<string, unknown> = Record<string, unknown>,
+  MetaResType = unknown,
+> = SchemaController<
+  Refs extends { params: StandardSchemaV1 } ? StandardSchemaV1.InferOutput<Refs['params']> : core.ParamsDictionary,
+  ResBody,
+  Refs extends { body: StandardSchemaV1 } ? StandardSchemaV1.InferOutput<Refs['body']> : unknown,
+  ParsedQs,
+  Locals,
+  MetaResType,
+  ValidatedData<Refs>
+>;
+
 //#region Factory
 
 type OutputOf<S, K extends string, Fallback> = S extends { [P in K]: infer T }

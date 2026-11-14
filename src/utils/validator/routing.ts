@@ -1,8 +1,23 @@
 import { controller } from '../routingUtils';
-import type { RouterWithSchema, SchemaMethodSettings, SchemaRouteSettings } from './types';
+import type {
+  RouterWithSchema,
+  SchemaControllerFor,
+  SchemaMethodSettings,
+  SchemaRouteSettings,
+  StandardValidatorSchema,
+} from './types';
 import { standardValidator } from './validator';
 import type { IRouter, RequestHandler } from '@novice1/routing';
 import routing from '@novice1/routing';
+
+export function defineSchemaController<
+  Refs extends StandardValidatorSchema = StandardValidatorSchema,
+  ResBody = unknown,
+  Locals extends Record<string, unknown> = Record<string, unknown>,
+  MetaResType = unknown,
+>(v: SchemaControllerFor<Refs, ResBody, Locals, MetaResType>) {
+  return v;
+}
 
 //#region Factory
 

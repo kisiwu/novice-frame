@@ -1,37 +1,10 @@
 import {
   type SchemaController,
-  type ValidatedData,
-  type StandardValidatorSchema,
   createWithSchema,
+  type SchemaControllerFor,
+  defineSchemaController,
 } from '@novice1/frame/validator';
-import type { StandardSchemaV1 } from '@standard-schema/spec';
-import type * as core from 'express-serve-static-core';
-import type { ParsedQs } from 'qs';
 import { z } from 'zod/v4';
-
-type SchemaControllerFor<
-  Refs extends StandardValidatorSchema = StandardValidatorSchema,
-  ResBody = unknown,
-  Locals extends Record<string, unknown> = Record<string, unknown>,
-  MetaResType = unknown,
-> = SchemaController<
-  Refs extends { params: StandardSchemaV1 } ? StandardSchemaV1.InferOutput<Refs['params']> : core.ParamsDictionary,
-  ResBody,
-  Refs extends { body: StandardSchemaV1 } ? StandardSchemaV1.InferOutput<Refs['body']> : unknown,
-  ParsedQs,
-  Locals,
-  MetaResType,
-  ValidatedData<Refs>
->;
-
-function defineSchemaController<
-  Refs extends StandardValidatorSchema = StandardValidatorSchema,
-  ResBody = unknown,
-  Locals extends Record<string, unknown> = Record<string, unknown>,
-  MetaResType = unknown,
->(v: SchemaControllerFor<Refs, ResBody, Locals, MetaResType>) {
-  return v;
-}
 
 const postSchemaController: SchemaController<
   unknown,
