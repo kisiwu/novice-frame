@@ -22,6 +22,10 @@ export function validatorSchema(
     try {
       const schema = retrieveSchema(req.meta?.parameters, schemaProperty);
       if (!schema) {
+        // add a default validated function if it doesn't exist
+        if (typeof (req as { validated?: () => unknown }).validated === 'undefined') {
+          (req as { validated?: () => unknown }).validated = () => {};
+        }
         return next();
       }
       const values = buildValueToValidate(schema, req);
