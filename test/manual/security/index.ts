@@ -1,3 +1,4 @@
+export * from './authorization-code-shape';
 export * from './client-credentials-shape';
 export * from './oidc-client-credentials-shape';
 export * from './security-shapes';
