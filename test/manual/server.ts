@@ -1,4 +1,4 @@
-import { clientCredentialsShape, flowRouter, tokenToSessionMiddleware } from './client-creds';
+import { clientCredentialsShape, flowRouter } from './client-creds-oidc';
 import router from './router';
 import { createBodyParserOptions } from './security/utils';
 import { OpenAPIZodHelper, PostmanZodHelper } from '@novice1/api-doc-zod-helper';
@@ -11,11 +11,14 @@ const app = new Frame({
     bodyParser: {
       ...createBodyParserOptions(),
     },
-    middlewares: [tokenToSessionMiddleware],
+    middlewares: [clientCredentialsShape.middlewares()],
   },
   routers: [router, flowRouter],
   docs: {
     path: '/docs',
+    host: {
+      url: 'http://localhost:3000',
+    },
     openAPIOptions: {
       helperClass: OpenAPIZodHelper,
       helperSchemaProperty: 'standardSchema',
@@ -28,22 +31,22 @@ const app = new Frame({
     options: {
       swagger: {
         customJs: ['/docs/_resources/swagger-custom.js'],
-        customCss: `
-  /* Hide the Authorize / Login / Logout action buttons inside the modal */
-  .swagger-ui .auth-container .auth-btn-wrapper .authorize,
-  .swagger-ui .auth-container .auth-btn-wrapper button[type="submit"] {
-    display: none !important;
-  }
-
-  /* Optional: Hide input fields (API key / username / password) if you only want to show scheme docs */
-  .swagger-ui .auth-container input[type="text"],
-  .swagger-ui .auth-container input[type="password"] {
-    display: none !important;
-  }
-        `,
-        swaggerOptions: {
-          supportedSubmitMethods: [], // Disable all submit methods
-        },
+        //        customCss: `
+        //  /* Hide the Authorize / Login / Logout action buttons inside the modal */
+        //  .swagger-ui .auth-container .auth-btn-wrapper .authorize,
+        //  .swagger-ui .auth-container .auth-btn-wrapper button[type="submit"] {
+        //    display: none !important;
+        //  }
+        //
+        //  /* Optional: Hide input fields (API key / username / password) if you only want to show scheme docs */
+        //  .swagger-ui .auth-container input[type="text"],
+        //  .swagger-ui .auth-container input[type="password"] {
+        //    display: none !important;
+        //  }
+        //        `,
+        //        swaggerOptions: {
+        //          supportedSubmitMethods: [], // Disable all submit methods
+        //        },
       },
     },
   },

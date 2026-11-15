@@ -1,4 +1,4 @@
-import { clientCredentialsScheme, isAppSessionMiddleware, requiredScopesMiddleware } from './client-creds';
+import { clientCredentialsShape, isAppSessionMiddleware, requiredScopesMiddleware } from './client-creds-oidc';
 import {
   addMessage,
   deleteMessageById,
@@ -46,7 +46,7 @@ router.with<{ message: string; id: string }>().post(
     tags: ['Messages'],
     auth: true,
     parameters: {
-      security: clientCredentialsScheme.toOpenAPISecurity(['write']),
+      security: clientCredentialsShape.toOpenAPISecurity(['write']),
       story: `### The Post Message Endpoint
 This endpoint allows you to post a new message.
 
@@ -167,7 +167,7 @@ router
       tags: ['Messages'],
       auth: true,
       parameters: {
-        security: clientCredentialsScheme.toOpenAPISecurity(['read']),
+        security: clientCredentialsShape.toOpenAPISecurity(['read']),
       },
       schema: {
         params: z.object({
@@ -194,7 +194,7 @@ router.with<z.infer<typeof resBodyMessageSchema>>().put(
     tags: ['Messages'],
     auth: true,
     parameters: {
-      security: clientCredentialsScheme.toOpenAPISecurity(['write']),
+      security: clientCredentialsShape.toOpenAPISecurity(['write']),
     },
     schema: {
       params: z.object({
@@ -237,7 +237,7 @@ router.delete(
     tags: ['Messages'],
     auth: true,
     parameters: {
-      security: clientCredentialsScheme.toOpenAPISecurity(['write']),
+      security: clientCredentialsShape.toOpenAPISecurity(['write']),
     },
     schema: {
       params: z.object({

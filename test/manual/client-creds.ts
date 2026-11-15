@@ -1,15 +1,15 @@
-import { ClientCredentialsSecurityShape } from './security/security-shapes';
-import { toWebRequest } from './security/utils';
+import { ClientCredentialsSecurityShape, RequestHandlerWithFlow } from './security';
+import { toWebStandardRequest } from './security/utils';
 import { controller } from '@novice1/frame';
 import { HttpError } from '@novice1/frame/errors';
 import { createWithSchema } from '@novice1/frame/validator';
 import {
   type AppCredentials,
   type AuthCredentials,
+  ClientCredentialsFlow,
   ClientCredentialsFlowBuilder,
   type UserCredentials,
 } from '@saurbit/oauth2';
-import type { RequestHandler } from 'express';
 
 export type Session = AuthCredentials<UserCredentials, AppCredentials>;
 
@@ -66,15 +66,26 @@ const flow = new ClientCredentialsFlowBuilder({
 /**
  * Security shape for handling client credentials flow authentication.
  */
-export const clientCredentialsShape = new ClientCredentialsSecurityShape(flow, (req, res, next) => {
-  // Check if the token verification was successful.
-  if ('auth' in req && req.auth) {
+export const clientCredentialsShape = new ClientCredentialsSecurityShape({
+  flow,
+  authHandler: (_, req, res, next) => {
+    // Check if the token verification was successful.
+    if ('auth' in req && req.auth) {
+      return next();
+    }
+    return res.status(401).send('Unauthorized');
+  },
+  middleware: async (_, req, _res, next) => {
+    // Verify the token from the request
+    const result = await flow.verifyToken(toWebStandardRequest(req));
+    if (!result.success) {
+      return next();
+    }
+    // Attach the verified credentials to the request object.
+    (req as { auth?: Session }).auth = result.credentials;
     return next();
-  }
-  return res.status(401).send('Unauthorized');
+  },
 });
-
-export const clientCredentialsScheme = clientCredentialsShape.scheme();
 
 //#endregion Client Credentials Security Shape
 
@@ -88,8 +99,8 @@ export const clientCredentialsScheme = clientCredentialsShape.scheme();
  * @param next The next middleware function
  * @returns void
  */
-export const tokenToSessionMiddleware: RequestHandler = async (req, res, next) => {
-  const result = await flow.verifyToken(toWebRequest(req));
+export const tokenToSessionMiddleware: RequestHandlerWithFlow<ClientCredentialsFlow> = async (f, req, res, next) => {
+  const result = await f.verifyToken(toWebStandardRequest(req));
   if (!result.success) {
     return next();
   }
@@ -175,13 +186,13 @@ export const isUserSessionMiddleware = controller<any, any>(async (req, res, nex
 export const flowRouter = createWithSchema()
   .post(
     {
-      path: clientCredentialsShape.flow.getTokenEndpoint(),
+      path: clientCredentialsShape.getTokenEndpoint(),
       parameters: { undoc: true }, // Mark this endpoint as undocumented
       schema: {},
     },
     async (req, res) => {
       try {
-        const result = await flow.token(toWebRequest(req));
+        const result = await clientCredentialsShape.token(req);
 
         if (!result.success) {
           return res.status(result.error.statusCode ?? 400).json({

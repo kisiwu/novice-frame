@@ -32,16 +32,24 @@ export function createBodyParserOptions(): { json: OptionsJson; urlencoded: Opti
   };
 }
 
+export interface WebStandardRequestOptions {
+  /** Override the origin used to build the absolute URL. Defaults to the request's own origin. */
+  origin?: string;
+}
+
+export type AnyExpressRequest = NoviceRequest | ExpressRequest;
+
 /**
  * Converts an Express or Novice request into a standard Web Request object.
  *
  * @param req The incoming Express or Novice request
  * @returns A standard Web Request object representing the incoming request
  */
-export function toWebRequest(req: NoviceRequest | ExpressRequest): Request {
+export function toWebStandardRequest(req: AnyExpressRequest, options?: WebStandardRequestOptions): Request {
   const protocol = req.protocol || 'http';
   const host = req.get('host') || 'localhost';
-  const url = new URL(req.originalUrl || req.url, `${protocol}://${host}`);
+  const origin = options?.origin || `${protocol}://${host}`;
+  const url = new URL(req.originalUrl || req.url, origin);
 
   const headers = new Headers();
   for (const [key, value] of Object.entries(req.headers)) {
@@ -58,7 +66,6 @@ export function toWebRequest(req: NoviceRequest | ExpressRequest): Request {
 
   if (hasBody) {
     if (rawBody) {
-      console.log('Using raw body for request');
       body = Readable.toWeb(Readable.from(rawBody ?? Buffer.alloc(0))) as ReadableStream;
     } else if (req.readableEnded && req.body !== undefined) {
       const contentType = req.get('content-type') || '';
