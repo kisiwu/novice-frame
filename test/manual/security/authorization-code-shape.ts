@@ -1,4 +1,5 @@
 import { OAuth2SecurityShape, type OAuth2SecurityShapeOptions } from './security-shapes';
+import { AnyExpressRequest, toWebStandardRequest, WebStandardRequestOptions } from './utils';
 import {
   type BaseAuthUtil,
   ChallengeAlgorithm,
@@ -6,7 +7,7 @@ import {
   GrantType,
   OAuth2Util,
 } from '@novice1/api-doc-generator';
-import type { AuthorizationCodeFlow } from '@saurbit/oauth2';
+import type { AuthorizationCodeFlow, AuthorizationCodeReqData } from '@saurbit/oauth2';
 
 //#region Authorization Code Security Shape
 
@@ -50,6 +51,32 @@ export class AuthorizationCodeSecurityShape<
 
   scheme(): BaseAuthUtil {
     return this.currentScheme;
+  }
+
+  getAuthorizationEndpoint() {
+    return this.flow.getAuthorizationEndpoint();
+  }
+
+  initiateAuthorization(req: AnyExpressRequest, options?: WebStandardRequestOptions) {
+    return this.flow.initiateAuthorization(toWebStandardRequest(req, { origin: this.getHost(), ...(options || {}) }));
+  }
+
+  processAuthorization(req: AnyExpressRequest, reqData: AuthorizationCodeReqData, options?: WebStandardRequestOptions) {
+    return this.flow.processAuthorization(
+      toWebStandardRequest(req, { origin: this.getHost(), ...(options || {}) }),
+      reqData
+    );
+  }
+
+  handleAuthorizationEndpoint(
+    req: AnyExpressRequest,
+    reqData: AuthorizationCodeReqData,
+    options?: WebStandardRequestOptions
+  ) {
+    return this.flow.handleAuthorizationEndpoint(
+      toWebStandardRequest(req, { origin: this.getHost(), ...(options || {}) }),
+      reqData
+    );
   }
 }
 //#endregion Authorization Code Security Shape

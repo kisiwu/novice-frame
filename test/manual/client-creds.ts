@@ -66,7 +66,7 @@ const flow = new ClientCredentialsFlowBuilder({
 /**
  * Security shape for handling client credentials flow authentication.
  */
-export const clientCredentialsShape = new ClientCredentialsSecurityShape({
+export const mySecurityShape = new ClientCredentialsSecurityShape({
   flow,
   authHandler: (_, req, res, next) => {
     // Check if the token verification was successful.
@@ -186,13 +186,13 @@ export const isUserSessionMiddleware = controller<any, any>(async (req, res, nex
 export const flowRouter = createWithSchema()
   .post(
     {
-      path: clientCredentialsShape.getTokenEndpoint(),
+      path: mySecurityShape.getTokenEndpoint(),
       parameters: { undoc: true }, // Mark this endpoint as undocumented
       schema: {},
     },
     async (req, res) => {
       try {
-        const result = await clientCredentialsShape.token(req);
+        const result = await mySecurityShape.token(req);
 
         if (!result.success) {
           return res.status(result.error.statusCode ?? 400).json({

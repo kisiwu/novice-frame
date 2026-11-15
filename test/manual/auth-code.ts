@@ -4,6 +4,7 @@ import { controller } from '@novice1/frame';
 import { HttpError } from '@novice1/frame/errors';
 import { createWithSchema } from '@novice1/frame/validator';
 import {
+  AccessDeniedError,
   type AppCredentials,
   type AuthCredentials,
   AuthorizationCodeFlow,
@@ -12,6 +13,7 @@ import {
 } from '@saurbit/oauth2';
 import { createInMemoryKeyStore, JoseJwksAuthority, JwksRotator } from '@saurbit/oauth2-jwt';
 import { createHash } from 'node:crypto';
+import { z } from 'zod/v4';
 
 export type Session = AuthCredentials<UserCredentials, AppCredentials>;
 
@@ -39,22 +41,24 @@ const codeStorage: Map<
   }
 > = new Map();
 
-//#region Client Credentials Flow Configuration
+//#region Authorization Code Flow Configuration
 
 /**
- * Client credentials flow configuration for the example client.
+ * Authorization Code flow configuration for the example client.
  */
 const flow = new AuthorizationCodeFlowBuilder({
   securitySchemeName: 'clientCredentials',
   accessTokenLifetime: 900, // 15 minutes in seconds
-  description: 'Client credentials flow for example client',
+  description: 'Authorization Code flow for example client',
   scopes: {
     read: 'Read access to resources',
     write: 'Write access to resources',
   },
   tokenEndpoint: '/oauth2/token',
+  authorizationEndpoint: '/oauth2/authorize',
 })
   .clientSecretBasicAuthenticationMethod()
+  .clientSecretPostAuthenticationMethod()
   .getClient((tokenRequest) => {
     if (
       tokenRequest.grantType === 'authorization_code' &&
@@ -84,7 +88,7 @@ const flow = new AuthorizationCodeFlowBuilder({
       return {
         id: 'example-client',
         grants: ['authorization_code'],
-        redirectUris: ['http://localhost:3000/callback'],
+        redirectUris: ['http://localhost:3000/docs/oauth2-redirect.html'],
         scopes: ['read', 'write'],
         metadata: {
           accessScope: codeData.scope,
@@ -153,11 +157,11 @@ const flow = new AuthorizationCodeFlowBuilder({
     return { isValid: false };
   })
   .getClientForAuthentication((data) => {
-    if (data.clientId === 'example-client' && data.redirectUri === 'http://localhost:3000/callback') {
+    if (data.clientId === 'example-client' && data.redirectUri === 'http://localhost:3000/docs/oauth2-redirect.html') {
       return {
         id: 'example-client',
         grants: ['authorization_code'],
-        redirectUris: ['http://localhost:3000/callback'],
+        redirectUris: ['http://localhost:3000/docs/oauth2-redirect.html'],
         scopes: ['read', 'write'],
       };
     }
@@ -195,14 +199,14 @@ const flow = new AuthorizationCodeFlowBuilder({
   })
   .build();
 
-//#endregion Client Credentials Flow Configuration
+//#endregion Authorization Code Flow Configuration
 
-//#region Client Credentials Security Shape
+//#region Authorization Code Security Shape
 
 /**
- * Security shape for handling client credentials flow authentication.
+ * Security shape for handling authorization code flow authentication.
  */
-export const clientCredentialsShape = new AuthorizationCodeSecurityShape({
+export const mySecurityShape = new AuthorizationCodeSecurityShape({
   flow,
   authHandler: (_, req, res, next) => {
     // Check if the token verification was successful.
@@ -223,7 +227,7 @@ export const clientCredentialsShape = new AuthorizationCodeSecurityShape({
   },
 });
 
-//#endregion Client Credentials Security Shape
+//#endregion Authorization Code Security Shape
 
 //#region Token to Session Middleware
 
@@ -316,19 +320,19 @@ export const isUserSessionMiddleware = controller<any, any>(async (req, res, nex
 //#region Flow Router
 
 /**
- * Router for handling client credentials flow endpoints.
+ * Router for handling authorization code flow endpoints.
  * This includes the token endpoint for obtaining access tokens.
  */
 export const flowRouter = createWithSchema()
   .post(
     {
-      path: clientCredentialsShape.getTokenEndpoint(),
+      path: mySecurityShape.getTokenEndpoint(),
       parameters: { undoc: true }, // Mark this endpoint as undocumented
       schema: {},
     },
     async (req, res) => {
       try {
-        const result = await clientCredentialsShape.token(req);
+        const result = await mySecurityShape.token(req);
 
         if (!result.success) {
           return res.status(result.error.statusCode ?? 400).json({
@@ -346,22 +350,108 @@ export const flowRouter = createWithSchema()
   )
   .get(
     {
-      path: flow.getAuthorizationEndpoint(),
+      path: mySecurityShape.getAuthorizationEndpoint(),
       parameters: { undoc: true },
       schema: {},
     },
     async (req, res) => {
-      // TODO: form
+      const result = await mySecurityShape.initiateAuthorization(req);
+      if (result.success) {
+        return res.header('Content-Type', 'text/html').send(`
+      <form method="post" action="${req.originalUrl}">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required />
+        <br />
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required />
+        <br />
+        <button type="submit">Login</button>
+      </form>
+    `);
+      }
+      return res.status(400).json({ error: 'invalid_request' });
     }
   )
-  .get(
+  .post(
     {
-      path: flow.getAuthorizationEndpoint(),
+      path: mySecurityShape.getAuthorizationEndpoint(),
       parameters: { undoc: true },
-      schema: {},
+      schema: {
+        body: z.object({
+          username: z.string().min(1),
+          password: z.string().min(1),
+        }),
+      },
     },
     async (req, res) => {
-      // TODO: handle form submission
+      const result = await mySecurityShape.processAuthorization(req, req.body);
+
+      if (result.type === 'error') {
+        const error = result.error;
+        if (result.redirectable) {
+          // Redirect to client with error
+          const qs = [
+            `error=${encodeURIComponent(error instanceof AccessDeniedError ? error.errorCode : 'invalid_request')}`,
+            `error_description=${encodeURIComponent(
+              error instanceof AccessDeniedError ? error.message : 'Invalid request'
+            )}`,
+            result.state ? `state=${encodeURIComponent(result.state)}` : null,
+          ]
+            .filter(Boolean)
+            .join('&');
+          return res.redirect(`${result.redirectUri}?${qs}`);
+        }
+        // Non-redirectable error — re-render the form with an error message
+        return res
+          .status(400)
+          .header('Content-Type', 'text/html')
+          .send(
+            `
+      <form method="post" action="${req.originalUrl}">
+        <p style="color: red;">${error.message}</p>
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required />
+        <br />
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required />
+        <br />
+        <button type="submit">Login</button>
+      </form>
+      `
+          );
+      }
+
+      if (result.type === 'code') {
+        // Redirect with the authorization code
+        const {
+          code,
+          context: { state, redirectUri },
+        } = result.authorizationCodeResponse;
+        const searchParams = new URLSearchParams();
+        searchParams.set('code', code);
+        if (state) searchParams.set('state', state);
+        return res.redirect(`${redirectUri}?${searchParams.toString()}`);
+      }
+
+      if (result.type === 'unauthenticated') {
+        return res
+          .status(400)
+          .header('Content-Type', 'text/html')
+          .send(
+            `
+      <form method="post" action="${req.originalUrl}">
+        <p style="color: red;">${result.message || 'Authentication failed. Please try again.'}</p>
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required />
+        <br />
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required />
+        <br />
+        <button type="submit">Login</button>
+      </form>
+      `
+          );
+      }
     }
   )
   .getRouter();

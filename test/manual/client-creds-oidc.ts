@@ -65,7 +65,7 @@ const flow = new OIDCClientCredentialsFlowBuilder({
 /**
  * Security shape for handling client credentials flow authentication.
  */
-export const clientCredentialsShape = new OIDCClientCredentialsSecurityShape({
+export const mySecurityShape = new OIDCClientCredentialsSecurityShape({
   host: 'http://localhost:3000',
   flow,
   authHandler: (_, req, res, next) => {
@@ -164,12 +164,12 @@ export const isUserSessionMiddleware = controller<any, any>(async (req, res, nex
 export const flowRouter = routing()
   .post(
     {
-      path: clientCredentialsShape.getTokenEndpoint(),
+      path: mySecurityShape.getTokenEndpoint(),
       parameters: { undoc: true }, // Mark this endpoint as undocumented
     },
     async (req, res) => {
       try {
-        const result = await clientCredentialsShape.token(req);
+        const result = await mySecurityShape.token(req);
 
         if (!result.success) {
           return res.status(result.error.statusCode ?? 400).json({
@@ -187,12 +187,12 @@ export const flowRouter = routing()
   )
   .get(
     {
-      path: clientCredentialsShape.getDiscoveryEndpoint(),
+      path: mySecurityShape.getDiscoveryEndpoint(),
       parameters: { undoc: true }, // Mark this endpoint as undocumented
     },
     async (req, res) => {
       try {
-        const result = clientCredentialsShape.getDiscoveryConfiguration(req, { origin: req.headers.origin }); // to overwrite the default host with the request's origin
+        const result = mySecurityShape.getDiscoveryConfiguration(req, { origin: req.headers.origin }); // to overwrite the default host with the request's origin
         return res.status(200).json(result);
       } catch (err) {
         console.error(err);

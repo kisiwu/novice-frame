@@ -1,4 +1,4 @@
-import { clientCredentialsShape, flowRouter } from './client-creds-oidc';
+import { mySecurityShape, flowRouter } from './auth-code';
 import router from './router';
 import { createBodyParserOptions } from './security/utils';
 import { OpenAPIZodHelper, PostmanZodHelper } from '@novice1/api-doc-zod-helper';
@@ -11,7 +11,7 @@ const app = new Frame({
     bodyParser: {
       ...createBodyParserOptions(),
     },
-    middlewares: [clientCredentialsShape.middlewares()],
+    middlewares: [mySecurityShape.middlewares()],
   },
   routers: [router, flowRouter],
   docs: {
@@ -50,7 +50,7 @@ const app = new Frame({
       },
     },
   },
-  security: clientCredentialsShape,
+  security: mySecurityShape,
 });
 
 app.get({ path: '/docs/_resources/swagger-custom.js', parameters: { undoc: true } }, (_, res) => {
