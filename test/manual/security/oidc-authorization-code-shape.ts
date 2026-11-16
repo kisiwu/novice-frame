@@ -1,12 +1,6 @@
-import { OIDCSecurityShape, type OAuth2SecurityShapeOptions } from './security-shapes';
+import { OIDCAuthUtil, OIDCSecurityShape, type OAuth2SecurityShapeOptions } from './security-shapes';
 import { type AnyExpressRequest, toWebStandardRequest, type WebStandardRequestOptions } from './utils';
-import {
-  type BaseAuthUtil,
-  ChallengeAlgorithm,
-  ClientAuthentication,
-  GrantType,
-  OAuth2Util,
-} from '@novice1/api-doc-generator';
+import { type BaseAuthUtil, ChallengeAlgorithm, ClientAuthentication, GrantType } from '@novice1/api-doc-generator';
 import type {
   OIDCAuthorizationCodeFlow,
   AuthorizationCodeReqData,
@@ -26,12 +20,8 @@ export type OIDCAuthorizationCodeSecurityShapeOptions<F extends OIDCAuthorizatio
 export class OIDCAuthorizationCodeSecurityShape<
   F extends OIDCAuthorizationCodeFlow = OIDCAuthorizationCodeFlow,
 > extends OIDCSecurityShape<F> {
-  protected currentScheme: BaseAuthUtil;
-
-  constructor(options: OIDCAuthorizationCodeSecurityShapeOptions<F>) {
-    super(options);
-
-    const docs = new OAuth2Util(this.flow.getSecuritySchemeName())
+  scheme(): BaseAuthUtil {
+    const docs = new OIDCAuthUtil(this.flow.getSecuritySchemeName())
       .setGrantType(GrantType.authorizationCodeWithPkce)
       .setScopes(this.flow.getScopes() || {})
       .setAccessTokenUrl(this.flow.getTokenEndpoint())
@@ -47,16 +37,15 @@ export class OIDCAuthorizationCodeSecurityShape<
     }
 
     const description = this.flow.getDescription();
-
+    const host = this.getHost();
     if (description) {
       docs.setDescription(description);
     }
+    if (host) {
+      docs.setHost(host);
+    }
 
-    this.currentScheme = docs;
-  }
-
-  scheme(): BaseAuthUtil {
-    return this.currentScheme;
+    return docs;
   }
 
   getAuthorizationEndpoint(): string {

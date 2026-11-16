@@ -1,5 +1,11 @@
-import { AnyExpressRequest, toWebStandardRequest, WebStandardRequestOptions } from './utils';
-import { OAuth2Util, type BaseAuthUtil, type SecuritySchemeObject } from '@novice1/api-doc-generator';
+import { type AnyExpressRequest, toWebStandardRequest, type WebStandardRequestOptions } from './utils';
+import {
+  OAuth2Util,
+  type OAuthFlowObject,
+  type OAuthFlowsObject,
+  type BaseAuthUtil,
+  type SecuritySchemeObject,
+} from '@novice1/api-doc-generator';
 import type { ISecurityShape } from '@novice1/frame';
 import type routing from '@novice1/routing';
 import type { OAuth2Flow, OAuth2FlowTokenResponse, OIDCFlow } from '@saurbit/oauth2';
@@ -156,6 +162,43 @@ export class OIDCAuthUtil extends OAuth2Util {
         openIdConnectUrl: openIdConnectUrl,
       },
     };
+  }
+}
+
+export class DeviceAuthorizationAuthUtil extends OAuth2Util {
+  constructor(securitySchemeName: string) {
+    super(securitySchemeName);
+    this.grantType = 'urn:ietf:params:oauth:grant-type:device_code';
+  }
+  setGrantType(_grantType: string): this {
+    return this;
+  }
+  toOpenAPI(): Record<string, SecuritySchemeObject> {
+    const flows: OAuthFlowsObject & { deviceAuthorization?: OAuthFlowObject & { deviceAuthorizationUrl?: string } } = {
+      deviceAuthorization: {
+        deviceAuthorizationUrl: this.authUrl,
+        scopes: { ...this.scopes },
+        tokenUrl: this.accessTokenUrl,
+      },
+    };
+    const r: SecuritySchemeObject = {
+      type: 'oauth2',
+      flows,
+      description: this.description,
+    };
+    return {
+      [this.securitySchemeName]: r,
+    };
+  }
+}
+
+export class OIDCDeviceAuthorizationAuthUtil extends OIDCAuthUtil {
+  constructor(securitySchemeName: string) {
+    super(securitySchemeName);
+    this.grantType = 'urn:ietf:params:oauth:grant-type:device_code';
+  }
+  setGrantType(_grantType: string): this {
+    return this;
   }
 }
 
