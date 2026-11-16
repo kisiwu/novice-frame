@@ -1,5 +1,5 @@
 import { OAuth2SecurityShape, type OAuth2SecurityShapeOptions } from './security-shapes';
-import { AnyExpressRequest, toWebStandardRequest, WebStandardRequestOptions } from './utils';
+import { type AnyExpressRequest, toWebStandardRequest, type WebStandardRequestOptions } from './utils';
 import {
   type BaseAuthUtil,
   ChallengeAlgorithm,
@@ -7,7 +7,14 @@ import {
   GrantType,
   OAuth2Util,
 } from '@novice1/api-doc-generator';
-import type { AuthorizationCodeFlow, AuthorizationCodeReqData } from '@saurbit/oauth2';
+import type {
+  AuthorizationCodeEndpointContext,
+  AuthorizationCodeEndpointResponse,
+  AuthorizationCodeFlow,
+  AuthorizationCodeInitiationResponse,
+  AuthorizationCodeProcessResponse,
+  AuthorizationCodeReqData,
+} from '@saurbit/oauth2';
 
 //#region Authorization Code Security Shape
 
@@ -53,15 +60,22 @@ export class AuthorizationCodeSecurityShape<
     return this.currentScheme;
   }
 
-  getAuthorizationEndpoint() {
+  getAuthorizationEndpoint(): string {
     return this.flow.getAuthorizationEndpoint();
   }
 
-  initiateAuthorization(req: AnyExpressRequest, options?: WebStandardRequestOptions) {
+  initiateAuthorization(
+    req: AnyExpressRequest,
+    options?: WebStandardRequestOptions
+  ): Promise<AuthorizationCodeInitiationResponse<AuthorizationCodeEndpointContext>> {
     return this.flow.initiateAuthorization(toWebStandardRequest(req, { origin: this.getHost(), ...(options || {}) }));
   }
 
-  processAuthorization(req: AnyExpressRequest, reqData: AuthorizationCodeReqData, options?: WebStandardRequestOptions) {
+  processAuthorization(
+    req: AnyExpressRequest,
+    reqData: AuthorizationCodeReqData,
+    options?: WebStandardRequestOptions
+  ): Promise<AuthorizationCodeProcessResponse> {
     return this.flow.processAuthorization(
       toWebStandardRequest(req, { origin: this.getHost(), ...(options || {}) }),
       reqData
@@ -72,7 +86,7 @@ export class AuthorizationCodeSecurityShape<
     req: AnyExpressRequest,
     reqData: AuthorizationCodeReqData,
     options?: WebStandardRequestOptions
-  ) {
+  ): Promise<AuthorizationCodeEndpointResponse> {
     return this.flow.handleAuthorizationEndpoint(
       toWebStandardRequest(req, { origin: this.getHost(), ...(options || {}) }),
       reqData

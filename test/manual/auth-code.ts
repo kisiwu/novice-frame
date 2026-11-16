@@ -120,14 +120,6 @@ const flow = new AuthorizationCodeFlowBuilder({
       ...registeredClaims,
     });
 
-    const { token: idToken } = await jwksAuthority.sign({
-      username: `${grantContext.client.metadata?.username}`,
-      name: accessScope.includes('profile') ? `${grantContext.client.metadata?.userFullName}` : undefined,
-      email: accessScope.includes('email') ? `${grantContext.client.metadata?.userEmail}` : undefined,
-      nonce: grantContext.client.metadata?.nonce ? `${grantContext.client.metadata?.nonce}` : undefined,
-      ...registeredClaims,
-    });
-
     return {
       accessToken: accessToken,
       scope: accessScope,
