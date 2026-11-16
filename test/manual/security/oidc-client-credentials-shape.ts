@@ -34,19 +34,5 @@ export class OIDCClientCredentialsSecurityShape<
 
     return docs;
   }
-
-  getDiscoveryEndpoint(): string {
-    const discoveryUrl = this.flow.getDiscoveryUrl();
-    try {
-      const parsed = new URL(discoveryUrl, 'http://placeholder.local');
-      return `${parsed.pathname}${parsed.search}${parsed.hash}`;
-    } catch {
-      return discoveryUrl;
-    }
-  }
-
-  getJwksEndpoint(): string | undefined {
-    return this.flow.getJwksEndpoint();
-  }
 }
 //#endregion OIDC Client Credentials Security Shape

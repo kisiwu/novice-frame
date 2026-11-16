@@ -108,6 +108,20 @@ export abstract class OIDCSecurityShape<F extends OIDCFlow = OIDCFlow> extends O
       req ? toWebStandardRequest(req, { origin: this.getHost(), ...(options || {}) }) : undefined
     );
   }
+
+  getDiscoveryEndpoint(): string {
+    const discoveryUrl = this.flow.getDiscoveryUrl();
+    try {
+      const parsed = new URL(discoveryUrl, 'http://placeholder.local');
+      return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+    } catch {
+      return discoveryUrl;
+    }
+  }
+
+  getJwksEndpoint(): string | undefined {
+    return this.flow.getJwksEndpoint();
+  }
 }
 
 //#endregion Security Shapes
