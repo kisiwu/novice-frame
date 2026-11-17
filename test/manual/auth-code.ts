@@ -47,7 +47,7 @@ const codeStorage: Map<
  * Authorization Code flow configuration for the example client.
  */
 const flow = new AuthorizationCodeFlowBuilder({
-  securitySchemeName: 'clientCredentials',
+  securitySchemeName: 'authorizationCode',
   accessTokenLifetime: 900, // 15 minutes in seconds
   description: 'Authorization Code flow for example client',
   scopes: {
@@ -88,7 +88,7 @@ const flow = new AuthorizationCodeFlowBuilder({
       return {
         id: 'example-client',
         grants: ['authorization_code'],
-        redirectUris: ['http://localhost:3000/docs/oauth2-redirect.html'],
+        redirectUris: ['http://localhost:3000/docs/scalar'],
         scopes: ['read', 'write'],
         metadata: {
           accessScope: codeData.scope,
@@ -149,11 +149,11 @@ const flow = new AuthorizationCodeFlowBuilder({
     return { isValid: false };
   })
   .getClientForAuthentication((data) => {
-    if (data.clientId === 'example-client' && data.redirectUri === 'http://localhost:3000/docs/oauth2-redirect.html') {
+    if (data.clientId === 'example-client' && data.redirectUri === 'http://localhost:3000/docs/scalar') {
       return {
         id: 'example-client',
         grants: ['authorization_code'],
-        redirectUris: ['http://localhost:3000/docs/oauth2-redirect.html'],
+        redirectUris: ['http://localhost:3000/docs/scalar'],
         scopes: ['read', 'write'],
       };
     }

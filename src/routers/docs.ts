@@ -1,29 +1,49 @@
 import type { DocsOptions } from '../docs';
 import type { OpenAPI, Postman } from '@novice1/api-doc-generator';
-import routing, { type RequestHandler } from '@novice1/routing';
-import swaggerUi from 'swagger-ui-express';
+import routing, { type RequestHandler, type IRouter } from '@novice1/routing';
 import YAML from 'yamljs';
 
 export function createDocsRouter(
   path: string,
   { openapi, postman }: { openapi: OpenAPI; postman: Postman },
   options?: DocsOptions
-) {
+): IRouter {
   const redocCustomCss = options?.redoc?.customCss;
   const redocCustomCssUrl = options?.redoc?.customCssUrl;
   const redocCustomJs = options?.redoc?.customJs;
+  const redocEnabled = options?.redoc?.enabled;
 
-  const swaggerUIController: RequestHandler = (req, res, next) => {
-    const swaggerDocument = openapi.result();
-    const swaggerUIOptions = options?.swagger || {};
-    if (typeof swaggerUIOptions.customSiteTitle == 'undefined') {
-      swaggerUIOptions.customSiteTitle = openapi.getTitle();
-    }
-    return swaggerUi.setup(swaggerDocument, swaggerUIOptions)(req, res, next);
-  };
+  const swaggerUIOptions = options?.swagger || {};
 
-  const redocController: RequestHandler = (_, res) => {
-    return res.send(`
+  const subRouter = routing();
+
+  // swagger-ui
+  if (swaggerUIOptions.enabled) {
+    const swaggerUIController: RequestHandler = async (req, res, next) => {
+      const swaggerDocument = openapi.result();
+      const swaggerUIOptions = options?.swagger || {};
+      if (typeof swaggerUIOptions.customSiteTitle == 'undefined') {
+        swaggerUIOptions.customSiteTitle = openapi.getTitle();
+      }
+      const swaggerUi = await import('swagger-ui-express');
+      return swaggerUi.setup(swaggerDocument, swaggerUIOptions)(req, res, next);
+    };
+
+    subRouter.get(
+      {
+        path: '/',
+        parameters: {
+          undoc: true,
+        },
+      },
+      swaggerUIController
+    );
+  }
+
+  // redoc
+  if (redocEnabled) {
+    const redocController: RequestHandler = (_, res) => {
+      return res.send(`
    <!DOCTYPE html>
     <html>
       <head>
@@ -51,19 +71,9 @@ export function createDocsRouter(
       </body>
     </html>
    `);
-  };
+    };
 
-  const swaggerRouter = routing()
-    .get(
-      {
-        path: '/',
-        parameters: {
-          undoc: true,
-        },
-      },
-      swaggerUIController
-    )
-    .get(
+    subRouter.get(
       {
         path: '/redoc',
         parameters: {
@@ -71,50 +81,67 @@ export function createDocsRouter(
         },
       },
       redocController
-    )
-    .get(
-      {
-        path: '/schema',
-        parameters: {
-          undoc: true,
-        },
+    );
+  }
+
+  subRouter.get(
+    {
+      path: '/schema',
+      parameters: {
+        undoc: true,
       },
-      (req, res) => {
-        const format = req.query.format == 'postman' ? postman : openapi;
+    },
+    (req, res) => {
+      const format = req.query.format == 'postman' ? postman : openapi;
 
-        if (!format) return res.status(400).json('Unknown format');
+      if (!format) return res.status(400).json('Unknown format');
 
-        const r = format.result();
+      const r = format.result();
 
-        if (options && req.query.format != 'postman') {
-          // add logo
-          if (options.logo?.url) {
-            r.info['x-logo'] = {
-              url: options.logo.url,
-              altText: options.logo.alt,
-            };
-          }
-          // add tag groups
-          if (options.tagGroups) {
-            const tagGroups: { name: string; tags: string[] }[] = [];
-            for (const name in options.tagGroups) {
-              tagGroups.push({
-                name,
-                tags: options.tagGroups[name],
-              });
-            }
-            r['x-tagGroups'] = tagGroups;
-          }
+      if (options && req.query.format != 'postman') {
+        // add logo
+        if (options.logo?.url) {
+          r.info['x-logo'] = {
+            url: options.logo.url,
+            altText: options.logo.alt,
+          };
         }
-
-        if (!req.query.json && req.query.format != 'postman') {
-          res.set('Content-Type', 'text/plain');
-          return res.send(YAML.stringify(r, 10, 2));
-        } else {
-          return res.json(r);
+        // add tag groups
+        if (options.tagGroups) {
+          const tagGroups: { name: string; tags: string[] }[] = [];
+          for (const name in options.tagGroups) {
+            tagGroups.push({
+              name,
+              tags: options.tagGroups[name],
+            });
+          }
+          r['x-tagGroups'] = tagGroups;
         }
       }
-    );
 
-  return routing().use(path, swaggerUi.serve, swaggerRouter);
+      if (!req.query.json && req.query.format != 'postman') {
+        res.set('Content-Type', 'text/plain');
+        return res.send(YAML.stringify(r, 10, 2));
+      } else {
+        return res.json(r);
+      }
+    }
+  );
+
+  const docsRouter = routing();
+
+  // swagger-ui base path
+  if (swaggerUIOptions.enabled) {
+    decorateRouterWithSwaggerUI(docsRouter, path, subRouter).catch((err) => {
+      throw err;
+    });
+    return docsRouter;
+  }
+
+  return docsRouter.use(path, subRouter);
+}
+
+async function decorateRouterWithSwaggerUI(mainRouter: IRouter, path: string, subRouter: IRouter): Promise<IRouter> {
+  const swaggerUi = await import('swagger-ui-express');
+  return mainRouter.use(path, swaggerUi.serve, subRouter);
 }

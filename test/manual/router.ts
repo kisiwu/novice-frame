@@ -1,4 +1,9 @@
-import { mySecurityShape, isAppSessionMiddleware, requiredScopesMiddleware } from './auth-code';
+import {
+  mySecurityShape,
+  isAppSessionMiddleware,
+  isUserSessionMiddleware,
+  requiredScopesMiddleware,
+} from './auth-code-oidc';
 import {
   addMessage,
   deleteMessageById,
@@ -73,7 +78,7 @@ The request body must include a "message" field of type string.
       })
       .setCode(200),
   },
-  isAppSessionMiddleware,
+  isUserSessionMiddleware,
   requiredScopesMiddleware(['write']),
   async (req) => {
     const {
@@ -175,7 +180,7 @@ router
         }),
       },
     },
-    isAppSessionMiddleware,
+    isUserSessionMiddleware,
     requiredScopesMiddleware(['read']),
     () => {
       throw new HttpError('Not implemented', 501);
@@ -211,7 +216,7 @@ router.with<z.infer<typeof resBodyMessageSchema>>().put(
       })
       .setCode(200),
   },
-  isAppSessionMiddleware,
+  isUserSessionMiddleware,
   requiredScopesMiddleware(['write']),
   async ({ params: { id }, validated }) => {
     const {
@@ -246,7 +251,7 @@ router.delete(
     },
     responses: new ResponseShape().setDescription('Delete request successful').setCode(200),
   },
-  isAppSessionMiddleware,
+  isUserSessionMiddleware,
   requiredScopesMiddleware(['write']),
   async ({ params: { id } }) => {
     const deleted = await deleteMessageById(id);

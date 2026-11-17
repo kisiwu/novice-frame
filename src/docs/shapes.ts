@@ -22,9 +22,12 @@ export * from './classes/SchemaShape';
 
 export type DocsTag = TagObject & Omit<Folder, 'item'>;
 
-export type DocsSwaggerUIOptions = Omit<Omit<SwaggerUiOptions, 'swaggerUrl'>, 'swaggerUrls'>;
+export type DocsSwaggerUIOptions = Omit<Omit<SwaggerUiOptions, 'swaggerUrl'>, 'swaggerUrls'> & {
+  enabled?: boolean;
+};
 
 export type DocsRedocOptions = {
+  enabled?: boolean;
   customCss?: string;
   customCssUrl?: string;
   customJs?: string;

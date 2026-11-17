@@ -1,4 +1,5 @@
-import { mySecurityShape } from './auth-code';
+import { mySecurityShape } from './auth-code-oidc';
+import { scalarRouter } from './docs';
 import router from './router';
 import { createBodyParserOptions } from './security/utils';
 import { OpenAPIZodHelper, PostmanZodHelper } from '@novice1/api-doc-zod-helper';
@@ -13,7 +14,7 @@ const app = new Frame({
     },
     middlewares: [mySecurityShape.middlewares()],
   },
-  routers: [router],
+  routers: [scalarRouter, router],
   docs: {
     path: '/docs',
     host: {
@@ -29,24 +30,30 @@ const app = new Frame({
       helperSchemaProperty: 'standardSchema',
     },
     options: {
+      redoc: {
+        // works out of the box with Redoc
+        enabled: true,
+      },
       swagger: {
+        // need to install swagger-ui-express and @types/swagger-ui-express for it to work
+        enabled: true,
         customJs: ['/docs/_resources/swagger-custom.js'],
-        //        customCss: `
-        //  /* Hide the Authorize / Login / Logout action buttons inside the modal */
-        //  .swagger-ui .auth-container .auth-btn-wrapper .authorize,
-        //  .swagger-ui .auth-container .auth-btn-wrapper button[type="submit"] {
-        //    display: none !important;
-        //  }
-        //
-        //  /* Optional: Hide input fields (API key / username / password) if you only want to show scheme docs */
-        //  .swagger-ui .auth-container input[type="text"],
-        //  .swagger-ui .auth-container input[type="password"] {
-        //    display: none !important;
-        //  }
-        //        `,
-        //        swaggerOptions: {
-        //          supportedSubmitMethods: [], // Disable all submit methods
-        //        },
+        customCss: `
+          /* Hide the Authorize / Login / Logout action buttons inside the modal */
+          .swagger-ui .auth-container .auth-btn-wrapper .authorize,
+          .swagger-ui .auth-container .auth-btn-wrapper button[type="submit"] {
+            display: none !important;
+          }
+        
+          /* Optional: Hide input fields (API key / username / password) if you only want to show scheme docs */
+          .swagger-ui .auth-container input[type="text"],
+          .swagger-ui .auth-container input[type="password"] {
+            display: none !important;
+          }
+                `,
+        swaggerOptions: {
+          supportedSubmitMethods: [], // Disable all submit methods
+        },
       },
     },
   },

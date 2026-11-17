@@ -49,7 +49,7 @@ const codeStorage: Map<
  * Authorization Code flow configuration for the example client.
  */
 const flow = new OIDCAuthorizationCodeFlowBuilder({
-  securitySchemeName: 'clientCredentials',
+  securitySchemeName: 'authorizationCode',
   accessTokenLifetime: 900, // 15 minutes in seconds
   description: 'Authorization Code flow for example client',
   scopes: {
@@ -62,6 +62,7 @@ const flow = new OIDCAuthorizationCodeFlowBuilder({
 })
   .clientSecretBasicAuthenticationMethod()
   .clientSecretPostAuthenticationMethod()
+  .noneAuthenticationMethod()
   .getClient((tokenRequest) => {
     if (
       tokenRequest.grantType === 'authorization_code' &&
@@ -91,8 +92,8 @@ const flow = new OIDCAuthorizationCodeFlowBuilder({
       return {
         id: 'example-client',
         grants: ['authorization_code'],
-        redirectUris: ['http://localhost:3000/docs/oauth2-redirect.html'],
-        scopes: ['read', 'write'],
+        redirectUris: ['http://localhost:3000/docs/scalar'],
+        scopes: ['openid', 'read', 'write'],
         metadata: {
           accessScope: codeData.scope,
           userId: codeData.userId,
@@ -162,12 +163,12 @@ const flow = new OIDCAuthorizationCodeFlowBuilder({
     return { isValid: false };
   })
   .getClientForAuthentication((data) => {
-    if (data.clientId === 'example-client' && data.redirectUri === 'http://localhost:3000/docs/oauth2-redirect.html') {
+    if (data.clientId === 'example-client' && data.redirectUri === 'http://localhost:3000/docs/scalar') {
       return {
         id: 'example-client',
         grants: ['authorization_code'],
-        redirectUris: ['http://localhost:3000/docs/oauth2-redirect.html'],
-        scopes: ['read', 'write'],
+        redirectUris: ['http://localhost:3000/docs/scalar'],
+        scopes: ['openid', 'read', 'write'],
       };
     }
   })
