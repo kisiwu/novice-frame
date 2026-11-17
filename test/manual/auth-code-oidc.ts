@@ -58,6 +58,7 @@ const flow = new OIDCAuthorizationCodeFlowBuilder({
   },
   tokenEndpoint: '/oauth2/token',
   authorizationEndpoint: '/oauth2/authorize',
+  jwksEndpoint: '/.well-known/jwks.json',
 })
   .clientSecretBasicAuthenticationMethod()
   .clientSecretPostAuthenticationMethod()
@@ -328,7 +329,7 @@ export const isUserSessionMiddleware = controller<any, any>(async (req, res, nex
  * Router for handling authorization code flow endpoints.
  * This includes the token endpoint for obtaining access tokens.
  */
-export const flowRouter = createWithSchema()
+createWithSchema(mySecurityShape.getOrCreateRouter())
   .post(
     {
       path: mySecurityShape.getTokenEndpoint(),
@@ -459,6 +460,39 @@ export const flowRouter = createWithSchema()
       }
     }
   )
-  .getRouter();
+  .get(
+    {
+      path: mySecurityShape.getDiscoveryEndpoint(),
+      parameters: { undoc: true }, // Mark this endpoint as undocumented
+      schema: {},
+    },
+    async (req, res) => {
+      try {
+        const result = mySecurityShape.getDiscoveryConfiguration(req, { origin: req.headers.origin }); // to overwrite the default host with the request's origin
+        return res.status(200).json(result);
+      } catch (err) {
+        console.error(err);
+        throw new HttpError(err instanceof Error ? err.message : 'Internal Server Error');
+      }
+    }
+  );
 
+const jwksEndpoint = mySecurityShape.getJwksEndpoint();
+if (jwksEndpoint) {
+  mySecurityShape.getOrCreateRouter().get(
+    {
+      path: jwksEndpoint,
+      parameters: { undoc: true }, // Mark this endpoint as undocumented
+    },
+    async (req, res) => {
+      try {
+        const result = jwksAuthority.getJwksEndpointResponse();
+        return res.status(200).json(result);
+      } catch (err) {
+        console.error(err);
+        throw new HttpError(err instanceof Error ? err.message : 'Internal Server Error');
+      }
+    }
+  );
+}
 //#endregion Flow Router

@@ -126,7 +126,10 @@ export class Frame extends FrameworkApp {
       );
     }
     if (config.security?.router) {
-      config.routers.push(config.security.router());
+      const securityRouter = config.security.router();
+      if (securityRouter) {
+        config.routers.push(securityRouter);
+      }
     }
 
     super(config);

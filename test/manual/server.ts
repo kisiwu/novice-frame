@@ -1,4 +1,4 @@
-import { mySecurityShape, flowRouter } from './auth-code';
+import { mySecurityShape } from './auth-code';
 import router from './router';
 import { createBodyParserOptions } from './security/utils';
 import { OpenAPIZodHelper, PostmanZodHelper } from '@novice1/api-doc-zod-helper';
@@ -13,7 +13,7 @@ const app = new Frame({
     },
     middlewares: [mySecurityShape.middlewares()],
   },
-  routers: [router, flowRouter],
+  routers: [router],
   docs: {
     path: '/docs',
     host: {

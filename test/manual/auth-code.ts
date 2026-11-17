@@ -315,7 +315,7 @@ export const isUserSessionMiddleware = controller<any, any>(async (req, res, nex
  * Router for handling authorization code flow endpoints.
  * This includes the token endpoint for obtaining access tokens.
  */
-export const flowRouter = createWithSchema()
+createWithSchema(mySecurityShape.getOrCreateRouter())
   .post(
     {
       path: mySecurityShape.getTokenEndpoint(),
@@ -445,7 +445,6 @@ export const flowRouter = createWithSchema()
           );
       }
     }
-  )
-  .getRouter();
+  );
 
 //#endregion Flow Router

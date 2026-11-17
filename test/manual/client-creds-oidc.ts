@@ -161,7 +161,8 @@ export const isUserSessionMiddleware = controller<any, any>(async (req, res, nex
  * Router for handling client credentials flow endpoints.
  * This includes the token endpoint for obtaining access tokens.
  */
-export const flowRouter = routing()
+mySecurityShape
+  .getOrCreateRouter()
   .post(
     {
       path: mySecurityShape.getTokenEndpoint(),

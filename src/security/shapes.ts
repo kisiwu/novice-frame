@@ -5,7 +5,7 @@ import { BaseAuthUtil } from '@novice1/api-doc-generator';
 import type { IRouter, RequestHandler } from '@novice1/routing';
 
 export interface ISecurityShape {
-  router?(): IRouter;
+  router?(): IRouter | undefined;
   scheme(): BaseAuthUtil;
   authHandlers(): RequestHandler[];
 }

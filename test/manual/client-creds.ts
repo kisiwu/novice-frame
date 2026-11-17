@@ -183,31 +183,28 @@ export const isUserSessionMiddleware = controller<any, any>(async (req, res, nex
  * Router for handling client credentials flow endpoints.
  * This includes the token endpoint for obtaining access tokens.
  */
-export const flowRouter = createWithSchema()
-  .post(
-    {
-      path: mySecurityShape.getTokenEndpoint(),
-      parameters: { undoc: true }, // Mark this endpoint as undocumented
-      schema: {},
-    },
-    async (req, res) => {
-      try {
-        const result = await mySecurityShape.token(req);
+mySecurityShape.getOrCreateRouter().post(
+  {
+    path: mySecurityShape.getTokenEndpoint(),
+    parameters: { undoc: true }, // Mark this endpoint as undocumented
+  },
+  async (req, res) => {
+    try {
+      const result = await mySecurityShape.token(req);
 
-        if (!result.success) {
-          return res.status(result.error.statusCode ?? 400).json({
-            error: result.error.errorCode,
-            error_description: result.error.message,
-          });
-        } else {
-          return res.status(200).json(result.tokenResponse);
-        }
-      } catch (err) {
-        console.error(err);
-        throw new HttpError(err instanceof Error ? err.message : 'Internal Server Error');
+      if (!result.success) {
+        return res.status(result.error.statusCode ?? 400).json({
+          error: result.error.errorCode,
+          error_description: result.error.message,
+        });
+      } else {
+        return res.status(200).json(result.tokenResponse);
       }
+    } catch (err) {
+      console.error(err);
+      throw new HttpError(err instanceof Error ? err.message : 'Internal Server Error');
     }
-  )
-  .getRouter();
+  }
+);
 
 //#endregion Flow Router

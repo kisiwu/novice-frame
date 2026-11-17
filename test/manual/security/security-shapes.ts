@@ -7,7 +7,7 @@ import {
   type SecuritySchemeObject,
 } from '@novice1/api-doc-generator';
 import type { ISecurityShape } from '@novice1/frame';
-import type routing from '@novice1/routing';
+import routing from '@novice1/routing';
 import type { OAuth2Flow, OAuth2FlowTokenResponse, OIDCFlow } from '@saurbit/oauth2';
 import type { RequestHandler } from 'express';
 
@@ -47,6 +47,7 @@ export abstract class OAuth2SecurityShape<F extends OAuth2Flow = OAuth2Flow> imp
   protected readonly authHandler: AuthHandlerWithFlow<F>;
   protected readonly middleware?: RequestHandlerWithFlow<F>;
   protected host?: string;
+  protected securityRouter?: routing.IRouter;
 
   get flow(): F {
     return this._flow;
@@ -61,12 +62,9 @@ export abstract class OAuth2SecurityShape<F extends OAuth2Flow = OAuth2Flow> imp
 
   abstract scheme(): BaseAuthUtil;
 
-  /**
-   * Optional: define the routes that generate the API key
-   */
-  //router(): routing.IRouter {
-  //    return routing()
-  //}
+  router(): routing.IRouter | undefined {
+    return this.securityRouter;
+  }
 
   /**
    * @returns An array of request handlers for the authorization middleware
@@ -81,6 +79,13 @@ export abstract class OAuth2SecurityShape<F extends OAuth2Flow = OAuth2Flow> imp
    */
   middlewares(): RequestHandler[] {
     return this.middleware ? [this.middleware.bind(this, this.flow)] : [];
+  }
+
+  getOrCreateRouter(): routing.IRouter {
+    if (!this.securityRouter) {
+      this.securityRouter = routing();
+    }
+    return this.securityRouter;
   }
 
   toOpenAPISecurity(scopes?: string[] | undefined) {
