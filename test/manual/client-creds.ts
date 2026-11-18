@@ -1,8 +1,6 @@
-import { ClientCredentialsSecurityShape, RequestHandlerWithFlow } from './security';
-import { toWebStandardRequest } from './security/utils';
 import { controller } from '@novice1/frame';
 import { HttpError } from '@novice1/frame/errors';
-import { createWithSchema } from '@novice1/frame/validator';
+import { ClientCredentialsSecurityShape, RequestHandlerWithFlow, toWebStandardRequest } from '@novice1/frame/security';
 import {
   type AppCredentials,
   type AuthCredentials,

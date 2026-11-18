@@ -19,6 +19,11 @@
       "types": "./lib/errors.d.ts",
       "require": "./lib/errors.js",
       "default": "./lib/errors.js"
+    },
+    "./security": {
+      "types": "./lib/security/index.d.ts",
+      "require": "./lib/security/index.js",
+      "default": "./lib/security/index.js"
     }
   },
   "repository": {
@@ -62,6 +67,7 @@
     "@types/node": "^26.6.6",
     "@types/supertest": "^7.2.1",
     "@types/swagger-ui-express": "^4.1.8",
+    "@types/web": "^0.0.367",
     "@types/yamljs": "^0.2.34",
     "@typescript-eslint/eslint-plugin": "^8.73.0",
     "@typescript-eslint/parser": "^8.73.0",
@@ -83,6 +89,7 @@
   },
   "peerDependencies": {
     "@novice1/routing": "^2.1.3",
+    "@saurbit/oauth2": "^0.1.23",
     "@types/express": "^5.0.6",
     "@types/swagger-ui-express": "^4.1.8",
     "express": "^5.3.0",
@@ -90,6 +97,9 @@
   },
   "peerDependenciesMeta": {
     "@types/express": {
+      "optional": true
+    },
+    "@saurbit/oauth2": {
       "optional": true
     },
     "@types/swagger-ui-express": {

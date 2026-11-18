@@ -1,8 +1,6 @@
-import { OIDCClientCredentialsSecurityShape } from './security';
-import { toWebStandardRequest } from './security/utils';
 import { controller } from '@novice1/frame';
 import { HttpError } from '@novice1/frame/errors';
-import routing from '@novice1/routing';
+import { OIDCClientCredentialsSecurityShape, toWebStandardRequest } from '@novice1/frame/security';
 import {
   type AppCredentials,
   type AuthCredentials,

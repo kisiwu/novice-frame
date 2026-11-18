@@ -1,13 +1,15 @@
-import { OIDCAuthorizationCodeSecurityShape, RequestHandlerWithFlow } from './security';
-import { toWebStandardRequest } from './security/utils';
 import { controller } from '@novice1/frame';
 import { HttpError } from '@novice1/frame/errors';
+import {
+  OIDCAuthorizationCodeSecurityShape,
+  RequestHandlerWithFlow,
+  toWebStandardRequest,
+} from '@novice1/frame/security';
 import { createWithSchema } from '@novice1/frame/validator';
 import {
   AccessDeniedError,
   type AppCredentials,
   type AuthCredentials,
-  AuthorizationCodeFlow,
   type UserCredentials,
   OIDCAuthorizationCodeFlowBuilder,
   type OIDCAuthorizationCodeFlow,
@@ -246,7 +248,12 @@ export const mySecurityShape = new OIDCAuthorizationCodeSecurityShape({
  * @param next The next middleware function
  * @returns void
  */
-export const tokenToSessionMiddleware: RequestHandlerWithFlow<AuthorizationCodeFlow> = async (f, req, res, next) => {
+export const tokenToSessionMiddleware: RequestHandlerWithFlow<OIDCAuthorizationCodeFlow> = async (
+  f,
+  req,
+  res,
+  next
+) => {
   const result = await f.verifyToken(toWebStandardRequest(req));
   if (!result.success) {
     return next();

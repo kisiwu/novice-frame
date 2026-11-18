@@ -1,3 +1,4 @@
+import type { ISecurityShape } from '../shapes';
 import { type AnyExpressRequest, toWebStandardRequest, type WebStandardRequestOptions } from './utils';
 import {
   OAuth2Util,
@@ -6,7 +7,6 @@ import {
   type BaseAuthUtil,
   type SecuritySchemeObject,
 } from '@novice1/api-doc-generator';
-import type { ISecurityShape } from '@novice1/frame';
 import routing from '@novice1/routing';
 import type { OAuth2Flow, OAuth2FlowTokenResponse, OIDCFlow } from '@saurbit/oauth2';
 import type { RequestHandler } from 'express';
@@ -175,7 +175,8 @@ export class DeviceAuthorizationAuthUtil extends OAuth2Util {
     super(securitySchemeName);
     this.grantType = 'urn:ietf:params:oauth:grant-type:device_code';
   }
-  setGrantType(_grantType: string): this {
+  setGrantType(grantType: string): this;
+  setGrantType(): this {
     return this;
   }
   toOpenAPI(): Record<string, SecuritySchemeObject> {
@@ -202,7 +203,8 @@ export class OIDCDeviceAuthorizationAuthUtil extends OIDCAuthUtil {
     super(securitySchemeName);
     this.grantType = 'urn:ietf:params:oauth:grant-type:device_code';
   }
-  setGrantType(_grantType: string): this {
+  setGrantType(_grantType: string): this;
+  setGrantType(): this {
     return this;
   }
 }

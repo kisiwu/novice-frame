@@ -1,7 +1,6 @@
-import { AuthorizationCodeSecurityShape, RequestHandlerWithFlow } from './security';
-import { toWebStandardRequest } from './security/utils';
 import { controller } from '@novice1/frame';
 import { HttpError } from '@novice1/frame/errors';
+import { AuthorizationCodeSecurityShape, RequestHandlerWithFlow, toWebStandardRequest } from '@novice1/frame/security';
 import { createWithSchema } from '@novice1/frame/validator';
 import {
   AccessDeniedError,

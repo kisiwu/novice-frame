@@ -1,10 +1,10 @@
 import { mySecurityShape } from './auth-code-oidc';
 import { scalarRouter } from './docs';
 import router from './router';
-import { createBodyParserOptions } from './security/utils';
 import { OpenAPIZodHelper, PostmanZodHelper } from '@novice1/api-doc-zod-helper';
 import { Frame } from '@novice1/frame';
 import { HttpError, HTTP_ERRORS } from '@novice1/frame/errors';
+import { createBodyParserOptions } from '@novice1/frame/security';
 import { AddressInfo } from 'node:net';
 
 const app = new Frame({
