@@ -96,7 +96,7 @@ export type ReqRefDefaults = {
 export type ReqRef = Partial<Record<keyof ReqRefDefaults, unknown>>;
 
 /**
- * Wrap a controller function into an express request handler
+ * WIP: Wrap a controller function into an express request handler
  * @param handler
  * @returns
  */

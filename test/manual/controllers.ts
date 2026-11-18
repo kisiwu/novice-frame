@@ -3,7 +3,7 @@ import {
   createWithSchema,
   type SchemaControllerFor,
   defineSchemaController,
-} from '@novice1/frame/validator';
+} from '@novice1/frame/routing';
 import { z } from 'zod/v4';
 
 const postSchemaController: SchemaController<
