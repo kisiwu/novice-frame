@@ -1,4 +1,4 @@
-import type { Controller } from '../routingUtils';
+import type { Controller } from './controller';
 import type { ErrorRequestHandler, RouteSettings } from '@novice1/routing';
 import type routing from '@novice1/routing';
 import type { StandardSchemaV1 } from '@standard-schema/spec';

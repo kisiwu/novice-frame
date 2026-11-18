@@ -1,4 +1,4 @@
-import { controller } from '../routingUtils';
+import { controller } from './controller';
 import type {
   RouterWithSchema,
   SchemaControllerFor,

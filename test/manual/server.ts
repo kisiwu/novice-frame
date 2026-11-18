@@ -88,6 +88,9 @@ app.get(
           <a href="/docs/redoc" target="_blank">Redoc ↗</a>
           <br />
           <br />
+          <a href="/docs/scalar" target="_blank">Scalar ↗</a>
+          <br />
+          <br />
           <a href="/docs/schema" target="_blank">OpenAPI Schema 3.1.1 ↗</a>
           <br />
           <br />

@@ -12,9 +12,9 @@ import {
   getMessagesWithSensitiveData,
   updateMessageById,
 } from './data';
-import { ResponseShape, SchemaObject } from '@novice1/frame';
+import { ResponseShape, type SchemaObject } from '@novice1/frame/docs';
 import { HttpError } from '@novice1/frame/errors';
-import { createWithSchema } from '@novice1/frame/validator';
+import { createWithSchema } from '@novice1/frame/routing';
 import routing from '@novice1/routing';
 import { z } from 'zod/v4';
 

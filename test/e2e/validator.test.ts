@@ -1,5 +1,5 @@
 import { Frame } from '@novice1/frame';
-import { createWithSchema } from '@novice1/frame/validator';
+import { createWithSchema } from '@novice1/frame/routing';
 import routing from '@novice1/routing';
 import { beforeEach, describe, it } from 'node:test';
 import request from 'supertest';

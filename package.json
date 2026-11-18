@@ -10,15 +10,20 @@
       "require": "./lib/index.js",
       "default": "./lib/index.js"
     },
-    "./validator": {
-      "types": "./lib/validator.d.ts",
-      "require": "./lib/validator.js",
-      "default": "./lib/validator.js"
+    "./docs": {
+      "types": "./lib/docs.d.ts",
+      "require": "./lib/docs.js",
+      "default": "./lib/docs.js"
     },
     "./errors": {
       "types": "./lib/errors.d.ts",
       "require": "./lib/errors.js",
       "default": "./lib/errors.js"
+    },
+    "./routing": {
+      "types": "./lib/routing.d.ts",
+      "require": "./lib/routing.js",
+      "default": "./lib/routing.js"
     },
     "./security": {
       "types": "./lib/security/index.d.ts",

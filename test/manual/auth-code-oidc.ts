@@ -1,11 +1,10 @@
-import { controller } from '@novice1/frame';
 import { HttpError } from '@novice1/frame/errors';
+import { controller, createWithSchema } from '@novice1/frame/routing';
 import {
   OIDCAuthorizationCodeSecurityShape,
   RequestHandlerWithFlow,
   toWebStandardRequest,
 } from '@novice1/frame/security';
-import { createWithSchema } from '@novice1/frame/validator';
 import {
   AccessDeniedError,
   type AppCredentials,
@@ -165,7 +164,7 @@ const flow = new OIDCAuthorizationCodeFlowBuilder({
     return { isValid: false };
   })
   .getClientForAuthentication((data) => {
-    if (data.clientId === 'example-client' && data.redirectUri === 'http://localhost:3000/docs/scalar') {
+    if (data.clientId === 'example-client' && data.redirectUri.startsWith('http://localhost:3000/docs/scalar')) {
       return {
         id: 'example-client',
         grants: ['authorization_code'],
