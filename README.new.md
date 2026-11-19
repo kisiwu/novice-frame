@@ -392,7 +392,7 @@ Shape options:
 
 - `flow`: the flow built with `@saurbit/oauth2`,
 - `authHandler(flow, req, res, next)`: protects the routes that require authorization,
-- `middleware(flow, req, res, next)` (optional): runs on every request, for example to turn a verified token into a session. Register it with `shape.middlewares()`,
+- `middleware(flow, req, res, next)` (optional): runs on every request, for example to turn a verified token into a session.
 - `host` (optional): origin used to build absolute URLs.
 
 Example with the client credentials flow:
@@ -482,7 +482,7 @@ app.get(
   (_, res) => res.json([])
 )
 ```
-> The `auth: true` property ensures that the route requires authentication, and the `parameters.security` array only documents the required scopes for the route. You have to implement the actual scope checks in your route handler.
+> The `auth: true` property ensures that the route requires authentication, and `parameters.security` only documents the required scopes by scheme for the route. You have to implement the actual scope checks in your route handler.
 
 Authorization code shapes also expose `getAuthorizationEndpoint()`, `initiateAuthorization(req)`, `processAuthorization(req, data)` and `handleAuthorizationEndpoint(req, data)`. OpenID Connect shapes add `getDiscoveryEndpoint()`, `getDiscoveryConfiguration(req)` and `getJwksEndpoint()`. You implement the endpoints (login form, redirects, discovery, JWKS) with these methods on `securityShape.getOrCreateRouter()`.
 
