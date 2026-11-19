@@ -4,8 +4,19 @@ import router from './router';
 import { OpenAPIZodHelper, PostmanZodHelper } from '@novice1/api-doc-zod-helper';
 import { Frame } from '@novice1/frame';
 import { HttpError, HTTP_ERRORS } from '@novice1/frame/errors';
+import { createStandardValidator } from '@novice1/frame/routing';
 import { createBodyParserOptions } from '@novice1/frame/security';
 import { AddressInfo } from 'node:net';
+
+// Override the default validator for the router.
+// It can be called before or after defining routes.
+// Useful to define default options and error handling for request validation.
+// It can still be overridden for specific routes if needed (onerror, options).
+router.setValidators(
+  createStandardValidator({}, (err, req, res) => {
+    return res.status(400).json({ details: err.issues, error: 'The request was invalid.', label: HTTP_ERRORS[400] });
+  })
+);
 
 const app = new Frame({
   framework: {

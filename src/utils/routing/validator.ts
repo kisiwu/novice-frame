@@ -74,4 +74,11 @@ export function validatorSchema(
   };
 }
 
+export function createStandardValidator(
+  options?: StandardSchemaV1.Options | undefined,
+  onerror?: ErrorRequestHandler | undefined
+): RequestHandler {
+  return validatorSchema(options, onerror, 'standardSchema');
+}
+
 export const standardValidator = validatorSchema(undefined, undefined, 'standardSchema');

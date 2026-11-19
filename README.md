@@ -1,511 +1,542 @@
 # @novice1/frame
-Web framework for building APIs.
 
-Based on [@novice1/app](https://www.npmjs.com/package/@novice1/app).
+Web framework for building APIs, with built-in OpenAPI / Postman documentation, standard-schema validation and OAuth2 / OpenID Connect security.
+
+Based on [@novice1/app](https://www.npmjs.com/package/@novice1/app) and [Express](https://expressjs.com/) 5.
 
 ## Installation
 
 ```bash
-npm i @novice1/frame
+npm i @novice1/frame @novice1/routing express
 ```
 
-Other dependencies:
+Optional packages:
+
 ```bash
-npm i @novice1/routing @novice1/api-doc-generator
+# TypeScript types for Express
+npm i -D @types/express
+
+# Swagger UI documentation page
+npm i swagger-ui-express
+npm i -D @types/swagger-ui-express
+
+# OAuth2 / OpenID Connect security shapes
+npm i @saurbit/oauth2
 ```
 
-## Usage
+## Package entry points
 
-### Simple usage
+| Import                   | Content                                                                                      |
+| ------------------------ | -------------------------------------------------------------------------------------------- |
+| `@novice1/frame`         | `Frame` and everything from `@novice1/app`                                                   |
+| `@novice1/frame/docs`    | `DocsShape`, schema/example/media-type/response shapes, and all of `@novice1/api-doc-generator` |
+| `@novice1/frame/routing` | `controller`, `createWithSchema` and other helpers for routes validated with standard schemas |
+| `@novice1/frame/security`| Security shapes (OAuth2, OpenID Connect) and helpers                                         |
+| `@novice1/frame/errors`  | `HttpError` and `HTTP_ERRORS`                                                                |
+
+## Quick start
 
 ```ts
 import { Frame } from '@novice1/frame'
 
-const app = new Frame();
+const app = new Frame()
 
-app.get({
+app.get(
+  {
     path: '/',
     name: 'Homepage',
     description: 'API homepage',
-    tags: 'Index'
-}, (_, res) => {
+    tags: 'Index',
+  },
+  (_, res) => {
     return res.json({ message: 'Hello world!' })
-})
+  }
+)
 
 app.use((_, res) => {
-    return res.status(404).json({ message: 'Not found' });
+  return res.status(404).json({ message: 'Not found' })
 })
 
 app.listen(3000)
 ```
 
-### Framework configuration
+## Framework configuration
 
-Based on [@novice1/app](https://www.npmjs.com/package/@novice1/app) `framework` configuration.
+The `framework` option extends the [@novice1/app](https://www.npmjs.com/package/@novice1/app) framework configuration:
 
-You can configure:
-
-- __auth__: (See [@novice1/app](https://www.npmjs.com/package/@novice1/app))
-- __middlewares__: (See [@novice1/app](https://www.npmjs.com/package/@novice1/app))
-- __validators__: (See [@novice1/app](https://www.npmjs.com/package/@novice1/app). The default validator is [@novice1/validator-joi](https://www.npmjs.com/package/@novice1/validator-joi) if none was specified.)
-- __validatorOnError__: `ErrorRequestHandler`. Only used for the default validator.
-- __cors__: `cors.CorsOptions | cors.CorsOptionsDelegate<cors.CorsRequest> | boolean`. (See [cors](https://www.npmjs.com/package/cors))
-- __bodyParser__: `{ json?: bodyParser.OptionsJson, urlencoded?: bodyParser.OptionsUrlencoded }`. (See [body-parser](https://www.npmjs.com/package/body-parser))
-- __cookieParser__: `{ options?: cookieParser.CookieParseOptions, secret?: string | string[] }`. (See [cookie-parser](https://www.npmjs.com/package/cookie-parser))
+- **auth**, **middlewares**, **validators**: see [@novice1/app](https://www.npmjs.com/package/@novice1/app).
+- **cors**: `cors.CorsOptions | cors.CorsOptionsDelegate | boolean`. See [cors](https://www.npmjs.com/package/cors).
+- **bodyParser**: `{ json?, urlencoded? }` options passed to `express.json()` and `express.urlencoded()`.
+- **cookieParser**: `{ options?, secret? }`. See [cookie-parser](https://www.npmjs.com/package/cookie-parser).
 
 ```ts
 import { Frame } from '@novice1/frame'
 
 const app = new Frame({
-    framework: {
-        cors: true,
-        validatorOnError: (err, _req, res) => {
-            // avoid sending back sensitive data ('_original' from joi validator)
-            const {_original, ...details} = err
-            return res.status(400).json({...details, code: 'badRequest'})
-        }
-    }
-});
+  framework: {
+    cors: true,
+    bodyParser: { json: { limit: '1mb' } },
+    cookieParser: { secret: 'my-secret' },
+  },
+})
 ```
 
-### API documentation
+## Routes with schema validation
 
-By default, the documentation of your API gets generated and accessible at:
-- `/docs`,
-- `/docs/redoc`,
-- `/docs/schema`,
-- `/docs/schema?format=postman`.
+`@novice1/frame/routing` offers an optional way of creating routes whose request data (`params`, `body`, `query`, `headers`, `cookies`, `files`) is validated by any library implementing [Standard Schema](https://standardschema.dev/), such as `zod`, `valibot` or `arktype`.
 
-You can add more info to the documentation and change the `/docs` prefix to something else if you want.
+```ts
+import { Frame } from '@novice1/frame'
+import { createWithSchema } from '@novice1/frame/routing'
+import { z } from 'zod/v4'
+
+const router = createWithSchema()
+
+router.with<{ id: string; message: string }>().post(
+  {
+    path: '/messages/:id',
+    name: 'Update a message',
+    tags: ['Messages'],
+    schema: {
+      params: z.object({ id: z.string() }),
+      body: z.object({ message: z.string().min(1) }),
+    },
+  },
+  async (req) => {
+    // typed and validated data
+    const { params, body } = req.validated()
+    return { id: params.id, message: body.message }
+  }
+)
+
+const app = new Frame({ routers: [router.getRouter()] })
+```
+
+- `createWithSchema(router?)` wraps an existing router (a new one by default). Use `.route({ method, ... })`, `.get()`, `.post()`, `.put()`, `.delete()`, `.patch()`, `.options()`, `.head()` or `.all()`.
+- `.with<ResBody, Locals>()` types the response body and `res.locals` of the route that follows.
+- `req.validated()` returns the validated values. The validated `params`, `body`, ... are also assigned to the request (except `query`).
+- On failure the response is a `400` with a `ValidationError` (`issues` holds the standard-schema issues). Override that per route with the `onerror` setting.
+- `options` is forwarded to the schema's `validate` function.
+- `defineSchemaController(...)` lets you write a typed handler separately from the route:
+
+```ts
+import { defineSchemaController } from '@novice1/frame/routing'
+import { z } from 'zod/v4'
+
+const bodySchema = z.object({ name: z.string().min(1) })
+
+const create = defineSchemaController<{ body: typeof bodySchema }, { id: string }>((req) => {
+  const { body } = req.validated()
+  return { id: body.name }
+})
+```
+
+### Controllers
+
+`controller()` wraps a handler so that what it returns is sent for you (and errors thrown from async handlers reach the error handlers):
+
+- an object is sent as JSON,
+- a string is sent as `text/plain`,
+- a `Buffer` is sent as is,
+- a readable stream is piped to the response,
+- `undefined` does nothing (you handle the response yourself).
+
+```ts
+import { controller } from '@novice1/frame/routing'
+
+app.get('/ping', controller(async () => ({ pong: true })))
+```
+
+### Errors
+
+```ts
+import { HttpError, HTTP_ERRORS } from '@novice1/frame/errors'
+
+app.get('/secret', () => {
+  throw new HttpError('Not allowed', 403)
+})
+
+app.useError((err, _req, res, _next) => {
+  if (err instanceof HttpError) {
+    return res.status(err.statusCode).json({ message: err.message || err.errorMessage })
+  }
+  return res.status(500).send(HTTP_ERRORS[500])
+})
+```
+
+## API documentation
+
+The documentation of your API (OpenAPI and Postman) is generated from your routes. The schema endpoints are always available (unless docs are disabled), while the UIs must be **explicitly enabled**:
+
+| Endpoint                   | Description                                       | Availability                   |
+| -------------------------- | ------------------------------------------------- | ------------------------------ |
+| `/docs`                    | Swagger UI                                        | `options.swagger.enabled`      |
+| `/docs/redoc`              | Redoc                                             | `options.redoc.enabled`        |
+| `/docs/schema`             | OpenAPI schema (YAML, or JSON with `?json=true`)  | always                         |
+| `/docs/schema?format=postman` | Postman collection                             | always                         |
+
+Swagger UI requires `swagger-ui-express` (see [Installation](#installation)). Redoc works out of the box.
 
 ```ts
 import { Frame } from '@novice1/frame'
 
 const app = new Frame({
-    docs: {
-        host: {
-            url: 'http://{domain}:{port}',
-            description: 'Dev API',
-            variables: {
-                domain: {
-                    default: 'localhost',
-                    enum: [
-                        'localhost',
-                        '127.0.0.1'
-                    ],
-                    description: 'Dev domain'
-                },
-                port: {
-                    default: '3000'
-                }
-            }
-        },
-        title: '@novice1/frame API',
-        license: {
-            name: 'ISC',
-            url: 'https://opensource.org/license/isc-license-txt'
-        },
-        options: {
-            logo: {
-                url: 'https://path-to-image.png',
-                alt: 'Dev API logo'
-            }
-        }
-    }
-});
+  docs: {
+    path: '/docs', // default
+    title: 'My API',
+    version: '1.0.0',
+    license: { name: 'MIT', url: 'https://opensource.org/license/mit' },
+    host: {
+      url: 'http://{domain}:{port}',
+      description: 'Dev API',
+      variables: {
+        domain: { default: 'localhost', enum: ['localhost', '127.0.0.1'] },
+        port: { default: '3000' },
+      },
+    },
+    tags: [{ name: 'Messages', description: 'Everything about messages' }],
+    options: {
+      logo: { url: 'https://path-to-image.png', alt: 'My API logo' },
+      tagGroups: { Resources: ['Messages'] },
+      redoc: { enabled: true },
+      swagger: { enabled: true },
+    },
+  },
+})
 ```
 
-## Shapes
+Other `docs` options: `disabled` (no docs routes at all), `consumes`, `security`, `examples`, `schemas` and `responses`.
 
-You can shape your frame (`@novice1/frame`) to complete and easily give authenticity to your API.
+Hide a route from the documentation with `parameters: { undoc: true }`.
 
-Shapes can help you:
-- make an authorization flow (OAuth2, ...), 
-- generate a detailed documentation,
-- ...
+### Generating the documentation from your validators
 
-### Security shape
+`docs.openAPIOptions` and `docs.postmanOptions` configure the generators from [@novice1/api-doc-generator](https://kisiwu.github.io/novice-api-doc-generator/latest/). Give them a helper class that converts your validator's schemas into documentation, for example [@novice1/api-doc-zod-helper](https://www.npmjs.com/package/@novice1/api-doc-zod-helper) for `zod`.
 
-The security shapes implement the interface `ISecurityShape`. `@novice1/frame` offers the following security shapes:
-- `OAuth2ACShape`: OAuth2 authorization code grant flow (+ PKCE)
-- `OAuth2ClientCredsShape`: OAuth2 client credentials grant flow
-- `OAuth2PasswordShape`: OAuth2 password grant flow
+When the routes are created with `createWithSchema`, `helperSchemaProperty` must be `'standardSchema'`:
 
-
-Example of using OAuth2 password grant flow:
 ```ts
-import { 
-    Frame,
-    OAuth2PasswordShape, 
-    OAuth2PasswordTokenRoute, 
-    OAuth2TokenResponse 
-} from '@novice1/frame'
-
-const tokenRoute = new OAuth2PasswordTokenRoute('/oauth2/v1/token')
-  .setHandler((params, _req, res) => {
-    let token: string;
-    let refreshToken: string;
-
-    // Here you handle the access token request
-    // ...
-
-    return res.json(
-        new OAuth2TokenResponse(token, 'bearer')
-          .setExpiresIn(3600)
-          .setRefreshToken(refreshToken)
-          .setScope(params.scope)
-      )
-  })
-
-const securityShape = new OAuth2PasswordShape('oAuth2', tokenRoute)
-    .setDescription('This API uses OAuth 2 with the password grant flow. [More info](/docs/redoc)')
-    .clientAuthenticationToBody()
-    .setAuthHandlers(
-        (req, res, next) => {
-            const authHeaderValue = req.header('authorization')
-            if (authHeaderValue && authHeaderValue.startsWith('Bearer ')) {
-                const token = authHeaderValue.substring(7)
-
-                // Here you validate the token
-                // ...
-
-                // authorized to go further
-                return next()
-            }
-
-            return res.status(401).json({
-                error: 'unauthorized'
-            })
-        }
-    )
+import { OpenAPIZodHelper, PostmanZodHelper } from '@novice1/api-doc-zod-helper'
+import { Frame } from '@novice1/frame'
 
 const app = new Frame({
-    security: securityShape
-});
+  docs: {
+    openAPIOptions: {
+      helperClass: OpenAPIZodHelper,
+      helperSchemaProperty: 'standardSchema',
+      version: '3.1.1',
+    },
+    postmanOptions: {
+      helperClass: PostmanZodHelper,
+      helperSchemaProperty: 'standardSchema',
+    },
+  },
+})
 ```
 
-Security shapes:
-- generate the documentation for the authorization flow(s),
-- register route(s) and middleware(s) to the frame. 
+### Using other documentation UIs
 
-That way, you just have to go to `/docs` to try the authorization flow for your API. Easy, right?
+The schema is plain OpenAPI, so any UI can use it. For example with [Scalar](https://www.npmjs.com/package/@scalar/express-api-reference):
 
-You could even make your own security shape:
 ```ts
-import { 
-    Frame,
-    ApiKeyLocation, 
-    ApiKeyUtil, 
-    GroupAuthUtil, 
-    ISecurityShape 
-} from '@novice1/frame'
 import routing from '@novice1/routing'
+import { apiReference } from '@scalar/express-api-reference'
 
-class MySecurityShape implements ISecurityShape {
-    /**
-     * Optional: define the routes that generate the API key
-     */
-    //router(): routing.IRouter {
-    //    return routing()
-    //}
+const scalarRouter = routing().use('/docs/scalar', apiReference({ url: '/docs/schema' }))
 
-    /**
-     * @returns a BaseAuthUtil extension ([@novice1/api-doc-generator](https://kisiwu.github.io/novice-api-doc-generator/latest/classes/utils_auth_basicAuthUtil.BasicAuthUtil.html))
-     */
-    scheme(): GroupAuthUtil {
-        const apiKey = new ApiKeyUtil('APIKey')
-            .setApiKeyLocation(ApiKeyLocation.header) // the location of the key (cookie, header or query)
-            .setName('authorization') // the header's name
-            .setDescription('Generated API key from your application console. MUST be prefixed by \'Session \'.')
-
-        return new GroupAuthUtil([
-            apiKey
-        ])
-    }
-
-    /**
-     * @returns Middlewares that give authorization
-     */
-    authHandlers(): routing.RequestHandler[] {
-        return [
-            (req, res, next) => {
-                const value = req.header('authorization')
-
-                if (value?.startsWith('Session ')) {
-                    return res.status(401).json({ error: 'unauthorized' })
-                }
-
-                // Here you validate the api key
-                // ...
-
-                // authorized to go further
-                return next()
-            }
-        ]
-    }
-}
-
-const app = new Frame({
-    security: new MySecurityShape()
-});
+const app = new Frame({ routers: [scalarRouter] })
 ```
 
-Using a security shape is the recommended way to register an authorization flow to the frame. Of course, there are other ways but that would be using [@novice1/app](https://www.npmjs.com/package/@novice1/app) and [@novice1/api-doc-generator](https://www.npmjs.com/package/@novice1/api-doc-generator) without the advantages of the `Frame`.
+## Docs shapes
 
-### Docs shape
+`@novice1/frame/docs` re-exports everything from `@novice1/api-doc-generator` and adds shapes that help you describe and reuse parts of the documentation:
 
-We saw [previously](#api-documentation) that you could configure the documentation.
-Tools, including the class `DocsShape`, can help you with that.
+- `DocsShape`: fluent alternative to the `docs` configuration object,
+- `ExampleShape`, `SchemaShape`: reusable examples and schemas (referenced with `$ref`),
+- `MediaTypeShape`: a media type that accepts `ExampleShape` and `SchemaShape`,
+- `ResponseShape`, `ContextResponseShape`, `GroupResponseShape`: response definitions that can be reused across routes.
 
-The current list of those tools is:
-- `DocsShape` _(of course)_
-- `ExampleShape`
-- `MediaTypeShape`
-- `SchemaShape`
-- `ContextResponseShape`
-- `GroupResponseShape`
-- `ResponseShape`
-
-If you are familiar with [@novice1/api-doc-generator](https://www.npmjs.com/package/@novice1/api-doc-generator) (_which is not possible for any human being, lol_), you will understand their purpose faster than anyone else.
-
-#### DocsShape
+### DocsShape
 
 ```ts
-import { DocsShape, Frame } from '@novice1/frame'
+import { Frame } from '@novice1/frame'
+import { DocsShape } from '@novice1/frame/docs'
 
 const docs = new DocsShape()
-    .setHost({
-            url: 'http://{domain}:{port}',
-            description: 'Dev API',
-            variables: {
-                domain: {
-                    default: 'localhost',
-                    enum: [
-                        'localhost',
-                        '127.0.0.1'
-                    ],
-                    description: 'Dev domain'
-                },
-                port: {
-                    default: '3000'
-                }
-            }
-    })
-    .setTitle('@novice1/frame API')
-    .setLicense('ISC', 'https://opensource.org/license/isc-license-txt')
-    .setLogo('https://path-to-image.png', 'Dev API logo')
+  .setTitle('My API')
+  .setVersion('1.0.0')
+  .setHost({ url: 'http://localhost:3000', description: 'Dev API' })
+  .setLicense('MIT', 'https://opensource.org/license/mit')
+  .setLogo('https://path-to-image.png', 'My API logo')
+  .setRedocOptions({ enabled: true })
+  .setSwaggerUIOptions({ enabled: true })
 
-const app = new Frame({ docs });
+const app = new Frame({ docs })
 ```
 
-#### ResponseShape
+### Response shapes
 
-Here is an example that we can start right away. It uses `ResponseShape`, `MediaTypeShape`, `GroupResponseShape` and `ContextResponseShape`. Those classes extend respectively [`ResponseUtil`](https://kisiwu.github.io/novice-api-doc-generator/latest/classes/utils_responses_responseUtil.ResponseUtil.html), [`MediaTypeUtil`](https://kisiwu.github.io/novice-api-doc-generator/latest/classes/utils_responses_mediaTypeUtil.MediaTypeUtil.html), [`GroupResponseUtil`](https://kisiwu.github.io/novice-api-doc-generator/latest/classes/utils_responses_responseUtil.GroupResponseUtil.html) and [`ContextResponseUtil`](https://kisiwu.github.io/novice-api-doc-generator/latest/classes/utils_responses_contextResponseUtils.ContextResponseUtil.html) from [@novice1/api-doc-generator](https://kisiwu.github.io/novice-api-doc-generator/latest/modules/utils_responses_all.html).
+Response shapes define the structure of your API responses. Define them once, register them in the docs, then use them in routes.
+
 ```ts
-import { 
-    ContextResponseShape,
-    DocsShape, 
-    Frame, 
-    GroupResponseShape, 
-    MediaTypeShape, 
-    ResponseShape 
-} from '@novice1/frame';
-import Joi from 'joi'
-
-// response shapes
-
-const greetingsResponse = new ResponseShape('GreetingsResponse')
-    .setDescription('Success')
-    .addMediaType('application/json', new MediaTypeShape({
-        examples: {
-            default_output: {
-                value: { message: 'Hello world!' },
-                description: 'The default output.'
-            },
-            custom_output: {
-                value: { message: 'Hello novice!' },
-                description: 'The custom output.'
-            }
-        },
-        schema: {
-            description: 'A message object.',
-            type: 'object',
-            properties: {
-                message: {
-                    description: 'The message content.',
-                    type: 'string',
-                    example: 'Hello world!'
-                }
-            },
-            required: [
-                'message'
-            ]
-        }
-    }))
-
-const badRequestResponse = new ResponseShape('ValidatorBadRequest')
-    .setDescription('Bad request')
-    .addMediaType('application/json', new MediaTypeShape({
-        schema: {
-            type: 'object',
-            properties: {
-                details: {
-                    type: 'array'
-                }
-            }
-        }
-    }))
-
-
-// frame
-
-const frame = new Frame({
-    docs: new DocsShape()
-        .setResponses(
-            new GroupResponseShape([
-                greetingsResponse,
-                badRequestResponse
-            ])
-        )
-})
-
-
-// routes
-
-frame.get({
-    path: '/greetings',
-    description: 'Greetings',
-    tags: 'Tests',
-    parameters: {
-        query: {
-            name: Joi.string()
-                .description('Your name.')
-                .example('novice')
-                .min(2)
-                .invalid('Frank')
-        }
-    },
-    responses: new GroupResponseShape([
-        new ContextResponseShape(greetingsResponse)
-            .setCode(200),
-        new ContextResponseShape(badRequestResponse)
-            .setCode(400)
-    ])
-}, (req, res) => {
-    return res.json({ message: `Hello ${req.query.name ? req.query.name : 'world'}!` })
-})
-
-
-// listen on port 3000
-
-frame.listen(3000)
-```
-Running the example above locally, we can see that the documentation (at [`localhost:3000/docs/`](http://localhost:3000/docs/) or [`localhost:3000/docs/redoc`](http://localhost:3000/docs/redoc)) defines response samples for the route `/greetings`.
-
-Now let's use `ExampleShape` and `SchemaShape` to get the following:
-```ts
+import { Frame } from '@novice1/frame'
 import {
-    ContextResponseShape,
-    DocsShape,
-    ExampleShape,
-    Frame,
-    GroupResponseShape,
-    MediaTypeShape,
-    ResponseShape,
-    SchemaShape
-} from '@novice1/frame';
-import Joi from 'joi'
+  ContextResponseShape,
+  DocsShape,
+  ExampleShape,
+  GroupResponseShape,
+  MediaTypeShape,
+  ResponseShape,
+  SchemaShape,
+} from '@novice1/frame/docs'
 
-
-// example shapes
-
-const defaultGreetingsResponse = new ExampleShape('DefaultGreetingsResponse')
-    .setValue({ message: 'Hello world!' })
-    .setDescription('The default output.')
-
-const customGreetingsResponse = new ExampleShape('CustomGreetingsResponse')
-    .setValue({ message: 'Hello novice!' })
-    .setDescription('The custom output.')
-
-
-// schema shapes
+// reusable example and schemas
+const helloExample = new ExampleShape('HelloExample')
+  .setValue({ message: 'Hello world!' })
+  .setDescription('The default output.')
 
 const messageSchema = new SchemaShape('Message', {
-    description: 'The message content.',
-    type: 'string',
-    example: 'A simple message.'
+  description: 'The message content.',
+  type: 'string',
 })
 
 const messageResponseSchema = new SchemaShape('MessageResponse', {
-    description: 'A message object.',
-    type: 'object',
-    properties: {
-        message: messageSchema
-    },
-    required: [
-        'message'
-    ]
+  type: 'object',
+  properties: { message: messageSchema },
+  required: ['message'],
 })
 
-
-// response shapes
-
+// reusable responses
 const greetingsResponse = new ResponseShape('GreetingsResponse')
-    .setDescription('Success')
-    .addMediaType('application/json', new MediaTypeShape({
-        examples: {
-            default_output: defaultGreetingsResponse,
-            custom_output: customGreetingsResponse
-        },
-        schema: messageResponseSchema
-    }))
+  .setDescription('Success')
+  .addMediaType(
+    'application/json',
+    new MediaTypeShape({
+      examples: { default_output: helloExample },
+      schema: messageResponseSchema,
+    })
+  )
 
-const badRequestResponse = new ResponseShape('ValidatorBadRequest')
-    .setDescription('Bad request')
-    .addMediaType('application/json', new MediaTypeShape({
-        schema: {
-            type: 'object',
-            properties: {
-                details: {
-                    type: 'array'
-                }
-            }
-        }
-    }))
-
+const badRequestResponse = new ResponseShape('BadRequest')
+  .setDescription('Bad request')
+  .addMediaType('application/json', { schema: { type: 'object', properties: { error: { type: 'string' } } } })
 
 // frame
-
-const frame = new Frame({
-    docs: new DocsShape()
-        .setExamples([
-            defaultGreetingsResponse,
-            customGreetingsResponse
-        ])
-        .setSchemas([
-            messageSchema,
-            messageResponseSchema
-        ])
-        .setResponses(
-            new GroupResponseShape([
-                greetingsResponse,
-                badRequestResponse
-            ])
-        )
+const app = new Frame({
+  docs: new DocsShape()
+    .setExamples([helloExample])
+    .setSchemas([messageSchema, messageResponseSchema])
+    .setResponses(new GroupResponseShape([greetingsResponse, badRequestResponse])),
 })
 
-// ...
+// routes
+app.get(
+  {
+    path: '/greetings',
+    description: 'Greetings',
+    tags: 'Tests',
+    responses: new GroupResponseShape([
+      new ContextResponseShape(greetingsResponse).setCode(200),
+      new ContextResponseShape(badRequestResponse).setCode(400),
+    ]),
+  },
+  (_, res) => res.json({ message: 'Hello world!' })
+)
 ```
-From the example above, we can understand that `ExampleShape` and `SchemaShape` help us create and reuse `examples` and `schemas`.
 
-If you know that you are going to use the same `responses`, `schemas` or `examples` multiple times, create shapes for them. The benefits of using those shapes are:
-- they will make your API [schema](http://localhost:3000/docs/schema) shorter by using [references](https://swagger.io/docs/specification/using-ref/).
+Responses, schemas and examples that are registered in the docs are referenced instead of repeated, which makes the generated schema shorter.
 
-But of course to make it even shorter, you don't have to define responses at all 😉. /s
+A route can also define a single response inline:
+
+```ts
+responses: new ResponseShape()
+  .setDescription('Success')
+  .addMediaType('application/json', { schema: { type: 'object' } })
+  .setCode(200)
+```
+
+- `ResponseShape` represents a single response. It extends [`ResponseUtil`](https://kisiwu.github.io/novice-api-doc-generator/latest/classes/utils_responses_responseUtil.ResponseUtil.html).
+- `MediaTypeShape` represents a media type within a response. It extends [`MediaTypeUtil`](https://kisiwu.github.io/novice-api-doc-generator/latest/classes/utils_responses_mediaTypeUtil.MediaTypeUtil.html).
+- `GroupResponseShape` groups multiple responses together. It extends [`GroupResponseUtil`](https://kisiwu.github.io/novice-api-doc-generator/latest/classes/utils_responses_responseUtil.GroupResponseUtil.html).
+- `ContextResponseShape` associates a response with a specific context (e.g., HTTP status code). It extends [`ContextResponseUtil`](https://kisiwu.github.io/novice-api-doc-generator/latest/classes/utils_responses_contextResponseUtils.ContextResponseUtil.html).
+
+## Security
+
+Security shapes (`@novice1/frame/security`) describe an authorization flow **and** wire it into the frame. A security shape:
+
+- generates the security scheme of the documentation,
+- provides the authorization middlewares (`authHandlers()`),
+- optionally provides a router with the flow's endpoints (`router()`).
+
+```ts
+import { Frame } from '@novice1/frame'
+import type { ISecurityShape } from '@novice1/frame/security'
+
+const app = new Frame({ security: mySecurityShape })
+```
+
+Routes use the frame's `auth` by default only when they ask for it (`auth: true`).
+
+### OAuth2 and OpenID Connect
+
+The OAuth2 and OpenID Connect flows are supported through [@saurbit/oauth2](https://www.npmjs.com/package/@saurbit/oauth2), which you install separately. You build a flow with the flow builders from `@saurbit/oauth2`, then wrap it in a security shape:
+
+| Security shape                        | Flow                                            |
+| ------------------------------------- | ----------------------------------------------- |
+| `AuthorizationCodeSecurityShape`      | OAuth2 authorization code (+ PKCE)              |
+| `ClientCredentialsSecurityShape`      | OAuth2 client credentials                       |
+| `OIDCAuthorizationCodeSecurityShape`  | OpenID Connect authorization code (+ PKCE)      |
+| `OIDCClientCredentialsSecurityShape`  | OpenID Connect client credentials               |
+
+Shape options:
+
+- `flow`: the flow built with `@saurbit/oauth2`,
+- `authHandler(flow, req, res, next)`: protects the routes that require authorization,
+- `middleware(flow, req, res, next)` (optional): runs on every request, for example to turn a verified token into a session.
+- `host` (optional): origin used to build absolute URLs.
+
+Example with the client credentials flow:
+
+```ts
+import { Frame } from '@novice1/frame'
+import { HttpError } from '@novice1/frame/errors'
+import {
+  ClientCredentialsSecurityShape,
+  createBodyParserOptions,
+  toWebStandardRequest,
+} from '@novice1/frame/security'
+import { ClientCredentialsFlowBuilder } from '@saurbit/oauth2'
+
+const flow = new ClientCredentialsFlowBuilder({
+  securitySchemeName: 'clientCredentials',
+  accessTokenLifetime: 900,
+  description: 'Client credentials flow',
+  scopes: { read: 'Read access', write: 'Write access' },
+  tokenEndpoint: '/oauth2/token',
+})
+  .clientSecretBasicAuthenticationMethod()
+  .getClient((tokenRequest) => {
+    // look up the client, return undefined if not found
+  })
+  .generateAccessToken((grantContext) => {
+    // create and store the token
+    return 'the-token'
+  })
+  .verifyToken((request, { token }) => {
+    // check the token
+    return { isValid: false }
+  })
+  .build()
+
+const securityShape = new ClientCredentialsSecurityShape({
+  flow,
+  authHandler: (_flow, req, res, next) => {
+    if ('auth' in req && req.auth) return next()
+    return res.status(401).send('Unauthorized')
+  },
+  middleware: async (flow, req, _res, next) => {
+    const result = await flow.verifyToken(toWebStandardRequest(req))
+    if (result.success) (req as { auth?: unknown }).auth = result.credentials
+    return next()
+  },
+})
+
+// Add the flow's endpoints BEFORE creating the Frame
+securityShape.getOrCreateRouter().post(
+  { path: securityShape.getTokenEndpoint(), parameters: { undoc: true } },
+  async (req, res) => {
+    const result = await securityShape.token(req)
+    if (!result.success) {
+      return res.status(result.error.statusCode ?? 400).json({
+        error: result.error.errorCode,
+        error_description: result.error.message,
+      })
+    }
+    return res.status(200).json(result.tokenResponse)
+  }
+)
+
+const app = new Frame({
+  framework: {
+    // keeps the raw body, needed by the flows to read token requests
+    bodyParser: { ...createBodyParserOptions() },
+    middlewares: [securityShape.middlewares()],
+  },
+  security: securityShape,
+})
+```
+
+Protect a route and document the scopes it needs:
+
+```ts
+app.get(
+  {
+    path: '/messages',
+    auth: true,
+    parameters: { security: securityShape.toOpenAPISecurity(['read']) },
+  },
+  (req, res, next) => {
+    // check if the user has the required scopes
+    next()
+  },
+  (_, res) => res.json([])
+)
+```
+> The `auth: true` property ensures that the route requires authentication, and `parameters.security` only documents the required scopes by scheme for the route. You have to implement the actual scope checks in your route handler.
+
+Authorization code shapes also expose `getAuthorizationEndpoint()`, `initiateAuthorization(req)`, `processAuthorization(req, data)` and `handleAuthorizationEndpoint(req, data)`. OpenID Connect shapes add `getDiscoveryEndpoint()`, `getDiscoveryConfiguration(req)` and `getJwksEndpoint()`. You implement the endpoints (login form, redirects, discovery, JWKS) with these methods on `securityShape.getOrCreateRouter()`.
+
+Helpers:
+
+- `toWebStandardRequest(req, { origin? })`: converts an Express request to a Web `Request`,
+- `createBodyParserOptions()`: body parser options that keep the raw body,
+- `RequestHandlerWithFlow`, `AuthHandlerWithFlow`: handler types that receive the flow as first argument.
+
+### Custom security shape
+
+Implement `ISecurityShape` to use any other scheme:
+
+```ts
+import { Frame } from '@novice1/frame'
+import { ApiKeyLocation, ApiKeyUtil, GroupAuthUtil } from '@novice1/frame/docs'
+import type { ISecurityShape } from '@novice1/frame/security'
+import routing from '@novice1/routing'
+
+class MySecurityShape implements ISecurityShape {
+  // optional: routes added to the frame (for example to generate keys)
+  // router() { return routing() }
+
+  // the documentation of the security scheme
+  scheme() {
+    return new GroupAuthUtil([
+      new ApiKeyUtil('APIKey')
+        .setApiKeyLocation(ApiKeyLocation.header)
+        .setName('authorization')
+        .setDescription("API key prefixed by 'Session '."),
+    ])
+  }
+
+  // middlewares that give authorization
+  authHandlers(): routing.RequestHandler[] {
+    return [
+      (req, res, next) => {
+        if (!req.header('authorization')?.startsWith('Session ')) {
+          return res.status(401).json({ error: 'unauthorized' })
+        }
+        // validate the key
+        return next()
+      },
+    ]
+  }
+}
+
+const app = new Frame({ security: new MySecurityShape() })
+```
 
 ## References
 
 - [@novice1/api-doc-generator](https://kisiwu.github.io/novice-api-doc-generator/latest/)
 - [@novice1/app](https://kisiwu.github.io/novice-app/latest/)
 - [@novice1/routing](https://www.npmjs.com/package/@novice1/routing#readme)
-- [@novice1/validator-joi](https://kisiwu.github.io/novice-validator-joi/latest/)
+- [@saurbit/oauth2](https://www.npmjs.com/package/@saurbit/oauth2)
+- [Standard Schema](https://standardschema.dev/)
