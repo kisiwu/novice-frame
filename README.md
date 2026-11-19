@@ -131,6 +131,43 @@ const create = defineSchemaController<{ body: typeof bodySchema }, { id: string 
 })
 ```
 
+### Custom default validator
+
+By default, routes created with `createWithSchema` use `standardValidator`, which passes no options to the schemas and answers failures with a `400` whose body is the `ValidationError`.
+
+`createStandardValidator(options?, onerror?)` creates a validator of the same kind with your own defaults:
+
+- `options` (`StandardSchemaV1.Options`): default options forwarded to the schemas' `validate` function.
+- `onerror` (`(err, req, res, next) => void`): default handler called when validation fails. `err` is a `ValidationError` whose `issues` holds the standard-schema issues.
+
+Set it as the default validator of a router with `router.setValidators()`:
+
+```ts
+import { Frame } from '@novice1/frame'
+import { HTTP_ERRORS } from '@novice1/frame/errors'
+import { createStandardValidator, createWithSchema } from '@novice1/frame/routing'
+
+const router = createWithSchema()
+
+// can be called before or after defining the routes
+router.getRouter().setValidators(
+  createStandardValidator(
+    { libraryOptions: { abortEarly: false } }, // default options for the schemas
+    (err, _req, res) => {
+      return res.status(400).json({
+        error: 'The request was invalid.',
+        label: HTTP_ERRORS[400],
+        details: err.issues,
+      })
+    }
+  )
+)
+
+const app = new Frame({ routers: [router.getRouter()] })
+```
+
+A route can still override these defaults with its own `options` and `onerror` settings, which take precedence over the ones given to `createStandardValidator`.
+
 ### Controllers
 
 `controller()` wraps a handler so that what it returns is sent for you (and errors thrown from async handlers reach the error handlers):
