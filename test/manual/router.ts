@@ -63,6 +63,9 @@ The request body must include a "message" field of type string.
         message: z.string(),
       }),
     },
+    onerror: (err, _req, res, _next) => {
+      return res.status(400).json(err);
+    },
     responses: new ResponseShape()
       .setDescription('Post request successful')
       .addMediaType('application/json', {

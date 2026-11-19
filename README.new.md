@@ -13,6 +13,9 @@ npm i @novice1/frame @novice1/routing express
 Optional packages:
 
 ```bash
+# TypeScript types for Express
+npm i -D @types/express
+
 # Swagger UI documentation page
 npm i swagger-ui-express
 npm i -D @types/swagger-ui-express
@@ -62,7 +65,6 @@ app.listen(3000)
 The `framework` option extends the [@novice1/app](https://www.npmjs.com/package/@novice1/app) framework configuration:
 
 - **auth**, **middlewares**, **validators**: see [@novice1/app](https://www.npmjs.com/package/@novice1/app).
-- **validatorOnError**: `ErrorRequestHandler` used by the default validator when no validator was set.
 - **cors**: `cors.CorsOptions | cors.CorsOptionsDelegate | boolean`. See [cors](https://www.npmjs.com/package/cors).
 - **bodyParser**: `{ json?, urlencoded? }` options passed to `express.json()` and `express.urlencoded()`.
 - **cookieParser**: `{ options?, secret? }`. See [cookie-parser](https://www.npmjs.com/package/cookie-parser).
@@ -111,14 +113,17 @@ const app = new Frame({ routers: [router.getRouter()] })
 ```
 
 - `createWithSchema(router?)` wraps an existing router (a new one by default). Use `.route({ method, ... })`, `.get()`, `.post()`, `.put()`, `.delete()`, `.patch()`, `.options()`, `.head()` or `.all()`.
-- `.with<ResBody, Locals>()` types the response body and `res.locals` of the routes that follow.
+- `.with<ResBody, Locals>()` types the response body and `res.locals` of the route that follows.
 - `req.validated()` returns the validated values. The validated `params`, `body`, ... are also assigned to the request (except `query`).
-- On failure the response is a `400` with a `ValidationError` (`issues` holds the standard-schema issues). Override that per route with the `onerror` setting, or for all routes with `validatorOnError`.
+- On failure the response is a `400` with a `ValidationError` (`issues` holds the standard-schema issues). Override that per route with the `onerror` setting.
 - `options` is forwarded to the schema's `validate` function.
 - `defineSchemaController(...)` lets you write a typed handler separately from the route:
 
 ```ts
 import { defineSchemaController } from '@novice1/frame/routing'
+import { z } from 'zod/v4'
+
+const bodySchema = z.object({ name: z.string().min(1) })
 
 const create = defineSchemaController<{ body: typeof bodySchema }, { id: string }>((req) => {
   const { body } = req.validated()
@@ -206,7 +211,7 @@ Hide a route from the documentation with `parameters: { undoc: true }`.
 
 ### Generating the documentation from your validators
 
-`docs.openAPIOptions` and `docs.postmanOptions` configure the generators from [@novice1/api-doc-generator](https://kisiwu.github.io/novice-api-doc-generator/latest/). Give them a helper class that converts your validator's schemas into documentation, for instance [@novice1/api-doc-zod-helper](https://www.npmjs.com/package/@novice1/api-doc-zod-helper) for `zod`.
+`docs.openAPIOptions` and `docs.postmanOptions` configure the generators from [@novice1/api-doc-generator](https://kisiwu.github.io/novice-api-doc-generator/latest/). Give them a helper class that converts your validator's schemas into documentation, for example [@novice1/api-doc-zod-helper](https://www.npmjs.com/package/@novice1/api-doc-zod-helper) for `zod`.
 
 When the routes are created with `createWithSchema`, `helperSchemaProperty` must be `'standardSchema'`:
 

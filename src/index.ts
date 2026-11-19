@@ -25,11 +25,6 @@ export interface FrameworkOptions extends BaseFrameworkOptions {
     options?: cookieParser.CookieParseOptions;
   };
   cors?: cors.CorsOptions | cors.CorsOptionsDelegate<cors.CorsRequest> | boolean;
-  /**
-   * Error request handler for the default validator
-   * if no validitor was set in constructor
-   */
-  validatorOnError?: routing.ErrorRequestHandler;
 }
 
 /**
