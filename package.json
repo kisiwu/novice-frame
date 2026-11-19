@@ -43,7 +43,8 @@
     "lint": "eslint .",
     "test": "npm run test:e2e",
     "test:e2e": "node --import tsx --test test/**/*.test.ts",
-    "test:manual": "tsx --watch test/manual/server.ts"
+    "test:manual": "tsx test/manual/server.ts",
+    "test:manual:watch": "tsx --watch test/manual/server.ts"
   },
   "keywords": [
     "api",

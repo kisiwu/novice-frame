@@ -316,6 +316,7 @@ const badRequestResponse = new ResponseShape('BadRequest')
   .setDescription('Bad request')
   .addMediaType('application/json', { schema: { type: 'object', properties: { error: { type: 'string' } } } })
 
+// frame
 const app = new Frame({
   docs: new DocsShape()
     .setExamples([helloExample])
@@ -323,6 +324,7 @@ const app = new Frame({
     .setResponses(new GroupResponseShape([greetingsResponse, badRequestResponse])),
 })
 
+// routes
 app.get(
   {
     path: '/greetings',
@@ -347,6 +349,11 @@ responses: new ResponseShape()
   .addMediaType('application/json', { schema: { type: 'object' } })
   .setCode(200)
 ```
+
+- `ResponseShape` represents a single response. It extends [`ResponseUtil`](https://kisiwu.github.io/novice-api-doc-generator/latest/classes/utils_responses_responseUtil.ResponseUtil.html).
+- `MediaTypeShape` represents a media type within a response. It extends [`MediaTypeUtil`](https://kisiwu.github.io/novice-api-doc-generator/latest/classes/utils_responses_mediaTypeUtil.MediaTypeUtil.html).
+- `GroupResponseShape` groups multiple responses together. It extends [`GroupResponseUtil`](https://kisiwu.github.io/novice-api-doc-generator/latest/classes/utils_responses_responseUtil.GroupResponseUtil.html).
+- `ContextResponseShape` associates a response with a specific context (e.g., HTTP status code). It extends [`ContextResponseUtil`](https://kisiwu.github.io/novice-api-doc-generator/latest/classes/utils_responses_contextResponseUtils.ContextResponseUtil.html).
 
 ## Security
 
@@ -463,9 +470,14 @@ app.get(
     auth: true,
     parameters: { security: securityShape.toOpenAPISecurity(['read']) },
   },
+  (req, res, next) => {
+    // check if the user has the required scopes
+    next()
+  },
   (_, res) => res.json([])
 )
 ```
+> The `auth: true` property ensures that the route requires authentication, and the `parameters.security` array only documents the required scopes for the route. You have to implement the actual scope checks in your route handler.
 
 Authorization code shapes also expose `getAuthorizationEndpoint()`, `initiateAuthorization(req)`, `processAuthorization(req, data)` and `handleAuthorizationEndpoint(req, data)`. OpenID Connect shapes add `getDiscoveryEndpoint()`, `getDiscoveryConfiguration(req)` and `getJwksEndpoint()`. You implement the endpoints (login form, redirects, discovery, JWKS) with these methods on `securityShape.getOrCreateRouter()`.
 
