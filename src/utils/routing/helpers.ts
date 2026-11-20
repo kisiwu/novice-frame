@@ -54,7 +54,7 @@ function retrieveParametersValue(
 export function isSchema(x: unknown): x is StandardSchemaV1 {
   return !!(
     x &&
-    typeof x === 'object' &&
+    (typeof x === 'object' || typeof x === 'function') &&
     '~standard' in x &&
     x['~standard'] &&
     typeof x['~standard'] === 'object' &&
